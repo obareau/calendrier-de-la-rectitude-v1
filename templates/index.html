@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calendrier de la Rectitude</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#060d1f;--bg2:rgba(0,0,0,0.45);--bg3:rgba(0,0,0,0.25);
+  --accent:#3b82f6;--txt:#93c5fd;--txt2:#e5e7eb;
+  --muted:#6b7280;--muted2:#374151;
+  --hover:rgba(30,58,95,0.55);--sel:#1d4ed8;
+  --cborder:rgba(59,130,246,0.22);
+  --card:rgba(0,0,0,0.45);
+  --border:#1f2937;--border2:#374151;
+  --modal-bg:#111827;
+  --d0:rgba(0,0,0,0.38);--d1:rgba(0,0,0,0.22);--d2:rgba(0,0,0,0.10);
+  font-size:15px;
+}
+body.light{
+  --bg:#f1f5f9;--bg2:rgba(255,255,255,0.82);--bg3:rgba(240,244,248,0.9);
+  --txt2:#1e293b;--muted:#64748b;--muted2:#cbd5e1;
+  --hover:rgba(59,130,246,0.1);--sel:#2563eb;
+  --card:rgba(255,255,255,0.85);
+  --border:#e2e8f0;--border2:#cbd5e1;
+  --modal-bg:#ffffff;
+  --d0:rgba(0,0,0,0.03);--d1:rgba(0,0,0,0.018);--d2:rgba(0,0,0,0.008);
+}
+body.light .nav-year input{color:#1e293b}
+body.light .site-title h1{color:var(--accent)}
+body.light .form-group input,body.light .form-group select,body.light .form-group textarea,
+body.light .months-table input,body.light .months-table select,
+body.light .fac-row input[type=text],body.light .sil-edit-row input[type=text]{background:#fff;color:#1e293b;border-color:var(--border2)}
+body.light .form-group select option,body.light .months-table select option{background:#fff;color:#1e293b}
+body.light .toast{background:#e2e8f0;color:#1e293b}
+body.light .toast.ok{background:rgba(20,83,45,0.12);border-color:#16a34a;color:#14532d}
+body.light .toast.err{background:rgba(220,38,38,0.1);border-color:#dc2626;color:#7f1d1d}
+body.light .backdrop{background:rgba(0,0,0,0.4)}
+body.light .decade-row{border-bottom:1px solid var(--border)}
+body.light .dec-label{border-right-color:var(--border);color:rgba(80,80,80,.4)}
+body.light .tl-dot{border-color:#fff}
+body{background:var(--bg);color:var(--txt2);font-family:'Courier New','Lucida Console',monospace;min-height:100vh;padding:16px 20px 60px;transition:background .3s,color .3s}
+button{font-family:inherit;cursor:pointer}
+input,select,textarea{font-family:inherit;font-size:inherit}
+
+#wrap{max-width:980px;margin:0 auto}
+.main-grid{display:grid;grid-template-columns:1fr 228px;gap:12px}
+.sidebar{display:flex;flex-direction:column;gap:10px}
+
+.site-title{text-align:center;margin-bottom:16px}
+.site-title h1{font-size:21px;font-weight:bold;letter-spacing:.22em;text-transform:uppercase;color:var(--txt)}
+.site-title .version{font-size:10px;color:var(--muted);letter-spacing:.15em;margin-top:3px}
+.site-title .sub{font-size:10px;color:var(--muted2);letter-spacing:.35em;margin-top:3px}
+
+.toolbar{display:flex;gap:6px;justify-content:flex-end;align-items:center;margin-bottom:6px;flex-wrap:wrap}
+.btn-sm{padding:5px 11px;font-size:11px;letter-spacing:.08em;background:var(--bg2);border:1px solid var(--border);color:var(--muted);border-radius:4px;transition:all .15s}
+.btn-sm:hover{border-color:var(--accent);color:var(--txt)}
+.btn-sm.active{border-color:var(--accent);color:var(--txt);background:rgba(59,130,246,0.12)}
+.theme-btn{padding:5px 12px;font-size:12px;background:none;border:1px solid var(--border2);border-radius:20px;color:var(--muted);transition:all .2s}
+.theme-btn:hover{border-color:var(--accent);color:var(--txt)}
+
+.view-tabs{display:flex;gap:4px;margin-bottom:10px;border-bottom:1px solid var(--border);padding-bottom:4px}
+.vtab{padding:6px 14px;font-size:12px;background:none;border:1px solid transparent;border-radius:5px 5px 0 0;color:var(--muted);transition:all .15s;letter-spacing:.06em}
+.vtab:hover{color:var(--txt2)}
+.vtab.active{border-color:var(--border2);border-bottom-color:transparent;color:var(--txt);background:var(--bg2);margin-bottom:-1px}
+
+.nav-bar{display:flex;align-items:center;justify-content:space-between;background:var(--bg2);border:1px solid var(--cborder);border-radius:8px;padding:10px 14px;margin-bottom:8px}
+.nav-center{display:flex;align-items:center;gap:22px}
+.nav-label{font-size:10px;color:var(--muted);letter-spacing:.18em;margin-bottom:2px}
+.nav-year input{background:transparent;border:none;outline:none;font-size:28px;font-weight:bold;color:#f9fafb;width:90px;text-align:center;font-family:inherit}
+.nav-month-name{font-size:22px;font-weight:bold;color:var(--txt)}
+.nav-month-num{font-size:10px;color:var(--muted);margin-bottom:2px}
+.nav-btn{background:none;border:none;font-size:22px;color:var(--muted);padding:4px 10px;transition:color .15s}
+.nav-btn:hover{color:var(--txt2)}
+.season-bar{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--muted);padding:0 2px;margin-bottom:14px}
+.season-bar .season-label{color:var(--txt)}
+.badge-biss{margin-left:8px;color:#ca8a04;border:1px solid #78350f;border-radius:4px;padding:1px 6px}
+
+.cal-wrap{background:var(--card);border:1px solid var(--cborder);border-radius:8px;overflow:hidden}
+.cal-header{display:grid;grid-template-columns:42px repeat(10,1fr);background:var(--d0);border-bottom:1px solid var(--border)}
+.cal-header span{padding:8px 4px;font-size:11px;color:var(--muted);text-align:center}
+.cal-header span:first-child{border-right:1px solid var(--border)}
+.decade-row{display:grid;grid-template-columns:42px repeat(10,1fr);border-bottom:1px solid rgba(255,255,255,0.04)}
+.decade-row:last-child{border-bottom:none}
+.decade-row:nth-child(2){background:var(--d0)}
+.decade-row:nth-child(3){background:var(--d1)}
+.decade-row:nth-child(4){background:var(--d2)}
+.dec-label{display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:bold;color:rgba(150,150,150,.5);border-right:1px solid rgba(255,255,255,0.04)}
+.day-cell{padding:14px 2px;text-align:center;border:none;background:transparent;color:var(--muted);font-family:inherit;font-size:14px;cursor:pointer;transition:background .1s;position:relative;border-bottom:2px solid transparent}
+.day-cell:hover{background:var(--hover);color:var(--txt2)}
+.day-cell.has-evt{color:var(--accent);font-weight:bold}
+.day-cell.selected{background:var(--sel)!important;color:#fff;font-weight:bold}
+.day-dot{position:absolute;top:5px;right:5px;width:5px;height:5px;border-radius:50%}
+
+.silence-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:18px}
+.silence-head{text-align:center;margin-bottom:14px}
+.silence-head .sub{font-size:10px;letter-spacing:.35em;color:var(--muted);margin-bottom:6px}
+.silence-head .desc{font-size:13px;color:var(--muted);font-style:italic}
+.jds-list{display:flex;flex-direction:column;gap:7px}
+.jds-item{display:flex;gap:12px;align-items:center;padding:11px 14px;border-radius:6px;cursor:pointer;border:1px solid var(--border);background:var(--bg2);transition:background .1s;text-align:left;width:100%;font-family:inherit;color:var(--txt2)}
+.jds-item:hover,.jds-item.selected{background:var(--hover);border-color:var(--border2)}
+.jds-item.fantome{border-style:dashed;opacity:.78}
+.jds-num{font-size:11px;color:var(--muted);font-weight:bold;min-width:42px}
+.jds-name{font-size:14px}
+.jds-sub{font-size:11px;color:var(--muted);margin-top:2px}
+
+.sb-block{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px}
+.sb-title{font-size:10px;color:var(--muted);letter-spacing:.18em;margin-bottom:9px}
+.season-group{margin-bottom:8px}
+.season-sname{font-size:10px;letter-spacing:.08em;opacity:.85;margin-bottom:4px}
+.month-btns{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px}
+.mth-btn{padding:6px 3px;text-align:center;font-size:11px;font-family:inherit;background:transparent;border:1px solid var(--border);border-radius:4px;color:var(--muted);transition:all .12s}
+.mth-btn:hover{background:var(--hover);color:var(--txt2)}
+.mth-btn.active{font-weight:bold;color:#f9fafb}
+.sil-btn{width:100%;margin-top:4px;padding:6px;font-size:11px;font-family:inherit;background:transparent;border:1px dashed var(--border2);border-radius:4px;color:var(--muted);transition:all .12s}
+.sil-btn:hover{background:var(--hover);color:var(--txt2)}
+.sil-btn.active{background:var(--hover);border-style:solid;color:var(--txt2)}
+.fete-card{padding:9px 11px;border-radius:5px;margin-bottom:6px;border:1px solid rgba(128,128,128,0.25);cursor:pointer;transition:opacity .12s}
+.fete-card:hover{opacity:.8}
+.fete-card:last-child{margin-bottom:0}
+.fete-top{display:flex;justify-content:space-between;font-size:11px;font-weight:bold}
+.fete-name{font-size:13px;color:var(--txt2);margin-top:3px}
+.fete-day{font-size:11px;color:var(--muted)}
+
+.day-panel{margin-top:12px;background:var(--bg2);border:1px solid var(--cborder);border-radius:8px;padding:14px 16px}
+.dp-top{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.dp-date{font-size:18px;font-weight:bold;color:var(--txt);letter-spacing:.1em}
+.dp-meta{font-size:11px;color:var(--muted);margin-top:4px}
+.add-btn{padding:7px 15px;font-size:12px;font-family:inherit;background:var(--bg2);border:1px solid var(--accent);color:var(--txt);border-radius:5px;transition:all .15s}
+.add-btn:hover{background:var(--accent);color:#fff}
+.evt-list{display:flex;flex-direction:column;gap:8px}
+.evt-card{border:1px solid rgba(128,128,128,0.2);border-radius:6px;padding:11px 13px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.evt-main{flex:1}
+.evt-faction{font-size:11px;font-weight:bold;letter-spacing:.08em}
+.evt-name{font-size:15px;color:var(--txt2);margin-top:3px}
+.evt-desc{font-size:12px;color:var(--muted);margin-top:4px;line-height:1.5}
+.evt-meta{font-size:10px;color:var(--muted);margin-top:4px;letter-spacing:.08em}
+.evt-actions{display:flex;gap:5px;flex-shrink:0}
+.ic-btn{background:none;border:none;font-size:15px;padding:3px 6px;color:var(--muted);border-radius:3px;transition:all .12s}
+.ic-btn:hover{color:var(--txt2);background:var(--hover)}
+.ic-btn.del:hover{color:#f87171}
+.no-evt{font-size:12px;color:var(--muted2);font-style:italic}
+.recur-badge{display:inline-block;font-size:10px;padding:1px 6px;border-radius:3px;margin-left:6px;background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.3);color:#93c5fd;vertical-align:middle}
+
+/* TIMELINE */
+.timeline-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:18px}
+.tl-controls{display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap}
+.tl-filter-faction,.tl-search{padding:6px 10px;font-size:12px;background:var(--bg3);border:1px solid var(--border2);border-radius:4px;color:var(--txt2)}
+.tl-filter-faction{min-width:170px}
+.tl-search{flex:1;min-width:120px}
+.tl-search::placeholder{color:var(--muted)}
+.tl-h-outer{overflow-x:auto;padding-bottom:12px;margin-top:8px}
+.tl-h-inner{position:relative;min-height:220px;padding:50px 20px 20px}
+.tl-axis{position:absolute;left:0;right:0;top:50%;height:2px;background:var(--border2)}
+.tl-dot{position:absolute;width:11px;height:11px;border-radius:50%;border:2px solid var(--bg);top:50%;transform:translate(-50%,-50%);cursor:pointer;transition:transform .15s;z-index:2}
+.tl-dot:hover{transform:translate(-50%,-50%) scale(1.5)}
+.tl-label{position:absolute;font-size:10px;white-space:nowrap;cursor:pointer;max-width:120px;overflow:hidden;text-overflow:ellipsis;line-height:1.3;text-align:center;transform:translateX(-50%)}
+.tl-year-mark{position:absolute;font-size:9px;color:var(--muted);transform:translateX(-50%);top:calc(50% - 18px)}
+.tl-year-tick{position:absolute;width:1px;height:8px;background:var(--border2);top:calc(50% - 4px)}
+.tl-list{display:flex;flex-direction:column;gap:6px}
+.tl-list-item{display:flex;gap:12px;align-items:flex-start;padding:10px 13px;border-radius:6px;border:1px solid var(--border);background:var(--bg3);transition:border-color .12s;border-left-width:3px}
+.tl-list-item:hover{border-color:var(--border2)}
+.tl-list-date{font-size:11px;color:var(--muted);min-width:130px;font-weight:bold;flex-shrink:0;padding-top:1px}
+.tl-list-name{font-size:14px;color:var(--txt2)}
+.tl-list-faction{font-size:11px;margin-top:2px}
+.tl-list-desc{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.4}
+
+/* FACTION TABLE */
+.faction-view{background:var(--bg2);border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.faction-table-wrap{overflow-x:auto}
+.faction-table{width:100%;border-collapse:collapse;font-size:12px}
+.faction-table th{padding:8px 10px;font-size:10px;color:var(--muted);letter-spacing:.12em;text-align:left;border-bottom:1px solid var(--border);background:var(--bg3);white-space:nowrap}
+.faction-table th.month-th{text-align:center;min-width:60px}
+.faction-table td{padding:6px 8px;border-bottom:1px solid var(--border);border-right:1px solid var(--border);vertical-align:top}
+.faction-table td:last-child{border-right:none}
+.faction-table tr:last-child td{border-bottom:none}
+.ft-faction-cell{font-weight:bold;font-size:12px;white-space:nowrap;min-width:130px}
+.ft-evt-chip{display:block;font-size:10px;padding:3px 6px;border-radius:3px;margin-bottom:3px;line-height:1.3;cursor:pointer;border:1px solid transparent;transition:opacity .12s}
+.ft-evt-chip:hover{opacity:.75}
+.ft-empty{color:var(--muted2);font-size:13px;display:block;text-align:center;padding:3px}
+
+.legend{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;margin-top:14px}
+.leg-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)}
+.leg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+.backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.72);display:flex;align-items:center;justify-content:center;z-index:100;padding:20px}
+.backdrop.hidden{display:none}
+.modal{background:var(--modal-bg);border:1px solid var(--border2);border-radius:10px;padding:22px 24px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto;position:relative}
+.modal.wide{max-width:700px}
+.modal h2{font-size:16px;color:var(--txt);letter-spacing:.12em;margin-bottom:18px}
+.modal-close{position:absolute;top:14px;right:14px;background:none;border:none;font-size:18px;color:var(--muted);cursor:pointer;line-height:1}
+.modal-close:hover{color:var(--txt2)}
+.form-group{margin-bottom:14px}
+.form-group label{display:block;font-size:11px;color:var(--muted);letter-spacing:.1em;margin-bottom:5px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form-group input[type=text],.form-group input[type=number],.form-group select,.form-group textarea{width:100%;padding:8px 10px;background:rgba(0,0,0,0.35);border:1px solid var(--border2);border-radius:5px;color:var(--txt2);outline:none;transition:border-color .15s}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--accent)}
+.form-group select option{background:var(--modal-bg)}
+.form-group textarea{resize:vertical;min-height:72px}
+.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
+.btn-cancel{padding:8px 16px;background:transparent;border:1px solid var(--border2);color:var(--muted);border-radius:5px;font-family:inherit;font-size:13px;transition:all .15s}
+.btn-cancel:hover{border-color:var(--muted);color:var(--txt2)}
+.btn-primary{padding:8px 20px;background:var(--accent);border:none;color:#fff;border-radius:5px;font-family:inherit;font-size:13px;transition:all .15s}
+.btn-primary:hover{opacity:.85}
+.months-table{width:100%;border-collapse:collapse}
+.months-table th{font-size:10px;color:var(--muted);letter-spacing:.12em;text-align:left;padding:6px 8px;border-bottom:1px solid var(--border)}
+.months-table td{padding:5px 6px;border-bottom:1px solid var(--border);vertical-align:middle}
+.months-table input,.months-table select{width:100%;padding:5px 6px;background:rgba(0,0,0,0.3);border:1px solid var(--border2);border-radius:4px;color:var(--txt2);font-family:inherit;font-size:12px}
+.months-table .save-row-btn{padding:4px 9px;font-size:11px;background:rgba(59,130,246,0.15);border:1px solid #3b82f6;color:#93c5fd;border-radius:3px;font-family:inherit;cursor:pointer}
+.fac-list{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
+.fac-row{background:rgba(0,0,0,0.25);border:1px solid var(--border);border-radius:6px;padding:10px 12px}
+.fac-row-top{display:grid;grid-template-columns:1fr 44px 44px auto auto;gap:6px;align-items:center;margin-bottom:6px}
+.fac-row input[type=text]{padding:5px 8px;background:rgba(0,0,0,0.3);border:1px solid var(--border2);border-radius:4px;color:var(--txt2);font-family:inherit;font-size:13px;width:100%}
+.fac-row input[type=color]{width:38px;height:28px;border:none;background:none;cursor:pointer;padding:0}
+.fac-row-bg{display:flex;gap:8px;align-items:center}
+.fac-row-bg label{font-size:10px;color:var(--muted);white-space:nowrap}
+.fac-row-bg input[type=text]{flex:1;padding:4px 7px;background:rgba(0,0,0,0.3);border:1px solid var(--border2);border-radius:4px;color:var(--muted);font-family:inherit;font-size:11px}
+.fac-preview{width:18px;height:18px;border-radius:3px;border:1px solid var(--border2);flex-shrink:0}
+.fac-add-section{border:1px dashed var(--border2);border-radius:8px;padding:14px;margin-bottom:14px}
+.fac-add-title{font-size:11px;color:var(--muted);letter-spacing:.12em;margin-bottom:10px}
+.silence-editor-list{display:flex;flex-direction:column;gap:8px}
+.sil-edit-row{display:grid;grid-template-columns:38px 1fr 1fr auto;gap:8px;align-items:center;background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:6px;padding:8px 10px}
+.sil-edit-num{font-size:12px;color:var(--muted);text-align:center;font-weight:bold}
+.sil-edit-row input[type=text]{padding:5px 8px;background:rgba(0,0,0,0.3);border:1px solid var(--border2);border-radius:4px;color:var(--txt2);font-family:inherit;font-size:12px;width:100%}
+.sil-edit-row.fantome{border-style:dashed;opacity:.8}
+.toast-wrap{position:fixed;bottom:20px;right:20px;z-index:200;display:flex;flex-direction:column;gap:8px}
+.toast{padding:10px 16px;border-radius:6px;font-size:13px;border:1px solid var(--border2);background:var(--modal-bg);color:var(--txt2);animation:fadeInUp .2s ease;box-shadow:0 4px 12px rgba(0,0,0,0.5)}
+.toast.ok{border-color:#16a34a;background:rgba(20,83,45,0.85);color:#bbf7d0}
+.toast.err{border-color:#dc2626;background:rgba(127,29,29,0.85);color:#fecaca}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.tl-tooltip{position:fixed;z-index:300;background:var(--modal-bg);border:1px solid var(--border2);border-radius:6px;padding:8px 12px;font-size:12px;max-width:240px;pointer-events:none;box-shadow:0 4px 14px rgba(0,0,0,0.5)}
+.tl-tooltip.hidden{display:none}
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div class="site-title">
+    <div class="sub">SYSTÈME TEMPOREL OFFICIEL</div>
+    <h1>◈ Calendrier de la Rectitude ◈</h1>
+    <div class="version" id="version-label">v—</div>
+    <div class="sub">C.G.U. — CONSEIL DES GOUVERNANCES UNIES</div>
+  </div>
+  <div class="toolbar">
+    <button class="btn-sm" onclick="openMonthModal()">⊞ Mois</button>
+    <button class="btn-sm" onclick="openSilenceModal()">◈ Silence</button>
+    <button class="btn-sm" onclick="openFactionModal()">⬡ Factions</button>
+    <button class="btn-sm" onclick="importCSV()">⬆ CSV</button>
+    <button class="btn-sm" onclick="window.location.href='/api/events/export'">⬇ CSV</button>
+    <button class="btn-sm" onclick="exportPDF()">⬇ PDF</button>
+    <button class="btn-sm" onclick="window.location.href='/about'">ℹ️ À propos</button>
+    <button class="btn-sm" onclick="window.location.href='/changelog'">📝 Changelog</button>
+    <button class="theme-btn" onclick="toggleTheme()" id="theme-btn">☀ Clair</button>
+  </div>
+  <input type="file" id="csv-input" accept=".csv,text/csv" style="display:none" onchange="handleCSVFile(event)">
+  <div class="view-tabs">
+    <button class="vtab active" id="tab-cal"      onclick="setView('cal')">📅 Calendrier</button>
+    <button class="vtab"        id="tab-timeline" onclick="setView('timeline')">⟷ Timeline</button>
+    <button class="vtab"        id="tab-factions" onclick="setView('factions')">⬡ Par faction</button>
+  </div>
+  <div id="view-cal"><div id="app"></div><div class="legend" id="legend"></div></div>
+  <div id="view-timeline" style="display:none">
+    <div class="timeline-wrap">
+      <div class="tl-controls">
+        <select class="tl-filter-faction" id="tl-filter-faction" onchange="renderTimeline()">
+          <option value="">Toutes les factions</option>
+        </select>
+        <input class="tl-search" id="tl-search" placeholder="Rechercher un événement…" oninput="renderTimeline()">
+        <div style="display:flex;gap:6px;margin-left:auto">
+          <button class="btn-sm" id="tl-tab-list" onclick="setTLTab('list')">☰ Liste</button>
+          <button class="btn-sm" id="tl-tab-axis" onclick="setTLTab('axis')">⟷ Axe</button>
+        </div>
+      </div>
+      <div id="tl-list-view"><div class="tl-list" id="tl-list"></div></div>
+      <div id="tl-axis-view" style="display:none"><div class="tl-h-outer"><div class="tl-h-inner" id="tl-h-inner"><div class="tl-axis"></div></div></div></div>
+    </div>
+  </div>
+  <div id="view-factions" style="display:none">
+    <div class="faction-view"><div class="faction-table-wrap"><table class="faction-table" id="faction-table"></table></div></div>
+  </div>
+</div>
+<div class="tl-tooltip hidden" id="tl-tooltip"></div>
+<div class="toast-wrap" id="toasts"></div>
+
+<!-- EVENT MODAL -->
+<div class="backdrop hidden" id="evt-backdrop" onclick="backdropClose(event,'evt-backdrop')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closeModal('evt-backdrop')">✕</button>
+    <h2 id="evt-title">Nouvel Événement</h2>
+    <form id="evt-form">
+      <input type="hidden" id="evt-id">
+      <div class="form-group"><label>NOM *</label><input type="text" id="evt-name" required placeholder="Ex : Bataille de Spire 47"></div>
+      <div class="form-group"><label>DESCRIPTION</label><textarea id="evt-desc" placeholder="Contexte, détails…"></textarea></div>
+      <div class="form-group"><label>FACTION</label><select id="evt-faction"><option value="">— Aucune —</option></select></div>
+      <div class="form-group">
+        <label>RÉCURRENCE</label>
+        <select id="evt-recurrence" onchange="onRecurChange()">
+          <option value="none">Ponctuel (aucune récurrence)</option>
+          <option value="annual">Annuel — même mois + jour chaque année</option>
+          <option value="monthly">Mensuel — même jour chaque mois</option>
+          <option value="decadal">Décadal — tous les 10 jours (même décade)</option>
+          <option value="every_n_years">Tous les N ans</option>
+        </select>
+      </div>
+      <div id="recur-n-group" class="form-group" style="display:none">
+        <label id="recur-n-label">INTERVALLE</label>
+        <input type="number" id="evt-recur-n" min="1" placeholder="Ex : 5">
+      </div>
+      <div class="form-row">
+        <div class="form-group" id="evt-year-group"><label>AN</label><input type="number" id="evt-an" placeholder="421"></div>
+        <div class="form-group"><label>MOIS</label><select id="evt-month" onchange="updateDayMax()"></select></div>
+      </div>
+      <div class="form-group"><label>JOUR</label><input type="number" id="evt-day" min="1" max="30" placeholder="1"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" onclick="closeModal('evt-backdrop')">Annuler</button>
+        <button type="submit" class="btn-primary">Enregistrer</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MONTH MODAL -->
+<div class="backdrop hidden" id="month-backdrop" onclick="backdropClose(event,'month-backdrop')">
+  <div class="modal wide" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closeModal('month-backdrop')">✕</button>
+    <h2>Éditeur des Mois</h2>
+    <table class="months-table"><thead><tr><th>#</th><th>Nom</th><th>Abrév.</th><th>Saison</th><th></th></tr></thead><tbody id="months-tbody"></tbody></table>
+    <div class="modal-actions"><button class="btn-cancel" onclick="closeModal('month-backdrop')">Fermer</button></div>
+  </div>
+</div>
+
+<!-- SILENCE MODAL -->
+<div class="backdrop hidden" id="silence-backdrop" onclick="backdropClose(event,'silence-backdrop')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closeModal('silence-backdrop')">✕</button>
+    <h2>Jours du Silence</h2>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:14px">Le Jour Fantôme (6) n'est actif que les années bissextiles.</p>
+    <div class="silence-editor-list" id="silence-editor-list"></div>
+    <div class="modal-actions"><button class="btn-cancel" onclick="closeModal('silence-backdrop')">Fermer</button></div>
+  </div>
+</div>
+
+<!-- FACTION MODAL -->
+<div class="backdrop hidden" id="fac-backdrop" onclick="backdropClose(event,'fac-backdrop')">
+  <div class="modal wide" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closeModal('fac-backdrop')">✕</button>
+    <h2>Gestionnaire des Factions</h2>
+    <div class="fac-add-section">
+      <div class="fac-add-title">+ NOUVELLE FACTION</div>
+      <div class="form-row">
+        <div class="form-group"><label>NOM</label><input type="text" id="new-fac-name" placeholder="Nom"></div>
+        <div class="form-group"><label>BG (rgba)</label><input type="text" id="new-fac-bg" placeholder="rgba(31,41,55,0.4)"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group" style="display:flex;align-items:center;gap:10px">
+          <div><label>BORDURE</label><input type="color" id="new-fac-border" value="#6b7280"></div>
+          <div><label>TEXTE</label><input type="color" id="new-fac-text" value="#d1d5db"></div>
+        </div>
+        <div class="form-group" style="display:flex;align-items:flex-end">
+          <button class="btn-primary" style="font-size:12px;width:100%" onclick="createFaction()">Créer</button>
+        </div>
+      </div>
+    </div>
+    <div id="fac-list" class="fac-list"></div>
+    <div class="modal-actions"><button class="btn-cancel" onclick="closeModal('fac-backdrop')">Fermer</button></div>
+  </div>
+</div>
+
+<script>
+const SEASON_THEMES={
+  'Glacies Disciplinae':{bg:'#060d1f',accent:'#3b82f6',txt:'#93c5fd',hover:'rgba(30,58,95,0.55)',sel:'#1d4ed8',cborder:'rgba(59,130,246,0.22)',label:'❄  Glacies Disciplinae — Hiver · Discipline froide',navColor:'#3b82f6'},
+  'Aetheria':{bg:'#020f0a',accent:'#10b981',txt:'#6ee7b7',hover:'rgba(6,78,59,0.55)',sel:'#065f46',cborder:'rgba(16,185,129,0.22)',label:'✦  Aetheria — Printemps · Renaissance éthérée',navColor:'#10b981'},
+  'Chronos Lux':{bg:'#100c00',accent:'#f59e0b',txt:'#fcd34d',hover:'rgba(61,44,0,0.55)',sel:'#92400e',cborder:'rgba(245,158,11,0.22)',label:'☀  Chronos Lux — Été · Force du temps solaire',navColor:'#f59e0b'},
+  'Ferrum Tenebris':{bg:'#0d0303',accent:'#ef4444',txt:'#fca5a5',hover:'rgba(61,10,10,0.55)',sel:'#7f1d1d',cborder:'rgba(239,68,68,0.22)',label:'⊕  Ferrum Tenebris — Automne · Résistance des ombres',navColor:'#ef4444'},
+  null:{bg:'#050505',accent:'#6b7280',txt:'#9ca3af',hover:'rgba(50,50,50,0.4)',sel:'#374151',cborder:'rgba(107,114,128,0.2)',label:'◈  Hors-Saison — Hors-Temps',navColor:'#6b7280'}
+};
+const SEASONS_LIST=['Glacies Disciplinae','Aetheria','Chronos Lux','Ferrum Tenebris'];
+const RECUR_LABELS={none:'',annual:'◎ ANNUEL',monthly:'◎ MENSUEL',decadal:'◎ DÉCADAL',every_n_years:'◎ N ANS'};
+
+const S={an:455,month:1,day:null,months:[],factions:[],events:[],silenceDays:[],allEvents:[],isLight:false,tlTab:'list',currentView:'cal'};
+
+const api={
+  async get(u){const r=await fetch(u);if(!r.ok)throw new Error(r.statusText);return r.json()},
+  async post(u,d){const r=await fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});if(!r.ok)throw new Error(r.statusText);return r.json()},
+  async put(u,d){const r=await fetch(u,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});if(!r.ok)throw new Error(r.statusText);return r.json()},
+  async del(u){const r=await fetch(u,{method:'DELETE'});if(!r.ok)throw new Error(r.statusText);return r.json()},
+};
+
+function isBissextile(an){const g=2413+an;return(g%4===0&&g%100!==0)||g%400===0}
+function formatDate(an,month,day){const p=an<0?'-':'';return`AN-${p}${String(Math.abs(an)).padStart(4,'0')}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`}
+function monthObj(num){return S.months.find(m=>m.num===num)||{}}
+function monthTheme(num){if(S.isLight)return{...SEASON_THEMES[monthObj(num).season||null],bg:'#f1f5f9'};return SEASON_THEMES[monthObj(num).season]||SEASON_THEMES[null]}
+function eventsForDay(day){return S.events.filter(e=>e.day===day)}
+function silenceDay(n){return S.silenceDays.find(d=>d.num===n)||{num:n,name:`JS-0${n}`,sub:''}}
+
+function applyTheme(T){
+  if(S.isLight)return;
+  const r=document.documentElement.style;
+  r.setProperty('--bg',T.bg);r.setProperty('--accent',T.accent);r.setProperty('--txt',T.txt);
+  r.setProperty('--hover',T.hover);r.setProperty('--sel',T.sel);r.setProperty('--cborder',T.cborder);
+  document.body.style.background=T.bg;
+}
+function toggleTheme(){
+  S.isLight=!S.isLight;
+  document.body.classList.toggle('light',S.isLight);
+  document.getElementById('theme-btn').textContent=S.isLight?'🌙 Sombre':'☀ Clair';
+  if(!S.isLight){applyTheme(SEASON_THEMES[monthObj(S.month).season]||SEASON_THEMES[null])}
+  else{['--bg','--accent','--txt','--hover','--sel','--cborder'].forEach(v=>document.documentElement.style.removeProperty(v));document.body.style.background=''}
+  render();
+}
+
+/* VIEW SWITCHING */
+function setView(v){
+  S.currentView=v;
+  ['cal','timeline','factions'].forEach(id=>{
+    document.getElementById('view-'+id).style.display=id===v?'block':'none';
+    document.getElementById('tab-'+id).classList.toggle('active',id===v);
+  });
+  if(v==='timeline'){loadAllEvents().then(()=>renderTimeline())}
+  if(v==='factions'){loadAllEvents().then(()=>renderFactionTable())}
+}
+function setTLTab(t){
+  S.tlTab=t;
+  document.getElementById('tl-list-view').style.display=t==='list'?'block':'none';
+  document.getElementById('tl-axis-view').style.display=t==='axis'?'block':'none';
+  document.getElementById('tl-tab-list').classList.toggle('active',t==='list');
+  document.getElementById('tl-tab-axis').classList.toggle('active',t==='axis');
+  renderTimeline();
+}
+
+/* DATA */
+async function loadConfig(){[S.months,S.factions,S.silenceDays]=await Promise.all([api.get('/api/months'),api.get('/api/factions'),api.get('/api/silence')])}
+async function loadEvents(){S.events=await api.get(`/api/events?an=${S.an}&month=${S.month}`)}
+async function loadAllEvents(){S.allEvents=await api.get('/api/events/all')}
+async function loadVersion(){try{const d=await api.get('/api/version');document.getElementById('version-label').textContent='v'+d.version}catch(e){}}
+
+/* RENDER CAL */
+function render(){
+  const T=monthTheme(S.month);const M=monthObj(S.month);
+  const biss=isBissextile(S.an);const greg=2413+S.an;
+  if(!S.isLight)applyTheme(T);
+  document.getElementById('app').innerHTML=`
+    ${renderNavBar(M,T)}
+    <div class="season-bar">
+      <span class="season-label">${T.label}</span>
+      <span>${greg<0?Math.abs(greg)+' av.':greg} grégorien${biss?'<span class="badge-biss">[BISSEXTILE]</span>':''}</span>
+    </div>
+    <div class="main-grid">
+      <div>${S.month<13?renderMonthGrid():renderSilence(biss)}</div>
+      <div class="sidebar">${renderMonthNav(T)}${S.events.length?renderFetesSidebar():''}</div>
+    </div>
+    ${S.day!==null?renderDayPanel(biss):''}`;
+  renderLegend();
+}
+
+function renderNavBar(M,T){return`<div class="nav-bar">
+  <button class="nav-btn" onclick="navigate(-1)">‹</button>
+  <div class="nav-center">
+    <div class="nav-year"><div class="nav-label">AN</div><input type="number" value="${S.an}" onchange="setYear(this.value)" oninput="setYear(this.value)"></div>
+    <div style="color:var(--muted2);font-size:18px">—</div>
+    <div><div class="nav-month-num">${String(S.month).padStart(2,'0')} / 13</div><div class="nav-month-name">${M.name||'?'}</div></div>
+  </div>
+  <button class="nav-btn" onclick="navigate(1)">›</button>
+</div>`}
+
+function renderMonthGrid(){
+  const decades=[[1,10],[11,20],[21,30]];
+  const rows=decades.map(([from,to],di)=>{
+    const label=['I','II','III'][di];
+    const cells=[];
+    for(let d=from;d<=to;d++){
+      const evts=eventsForDay(d);const hf=evts.length>0;const sel=S.day===d;
+      const dc=hf?(evts[0].border_color||'#ef4444'):null;
+      const cls=['day-cell',hf?'has-evt':'',sel?'selected':''].filter(Boolean).join(' ');
+      cells.push(`<button class="${cls}" style="${hf?`border-bottom:2px solid ${dc}`:''}" onclick="selectDay(${d})">${d}${hf&&!sel?`<span class="day-dot" style="background:${dc}"></span>`:''}</button>`);
+    }
+    return`<div class="decade-row"><span class="dec-label">${label}</span>${cells.join('')}</div>`;
+  }).join('');
+  return`<div class="cal-wrap"><div class="cal-header"><span></span>${[1,2,3,4,5,6,7,8,9,10].map(n=>`<span>${n}</span>`).join('')}</div>${rows}</div>`;
+}
+
+function renderSilence(biss){
+  const days=biss?S.silenceDays:S.silenceDays.filter(d=>!d.fantome);
+  const items=days.map(j=>{
+    const sel=S.day===j.num;
+    const cls=['jds-item',sel?'selected':'',j.fantome?'fantome':''].filter(Boolean).join(' ');
+    const evts=eventsForDay(j.num);
+    const dot=evts.length?`<span style="width:6px;height:6px;border-radius:50%;display:inline-block;background:${evts[0].border_color||'#ef4444'};margin-left:6px;vertical-align:middle"></span>`:'';
+    return`<button class="${cls}" onclick="selectDay(${j.num})">
+      <span class="jds-num">JS-0${j.num}</span>
+      <div style="flex:1"><div class="jds-name">${j.name}${j.fantome?' ⚠':''}${dot}</div><div class="jds-sub">${j.sub}</div></div>
+    </button>`;
+  }).join('');
+  return`<div class="silence-wrap"><div class="silence-head">
+    <div class="sub">HORS-TEMPS · HORS-SAISON</div>
+    <div class="desc">Le temps s'arrête. La surveillance s'intensifie.</div>
+    ${biss?'<div style="margin-top:8px;font-size:11px;color:#b45309;border:1px solid #78350f;border-radius:4px;padding:3px 10px;display:inline-block">⚠ Année bissextile — Jour Fantôme actif</div>':''}
+  </div><div class="jds-list">${items}</div></div>`;
+}
+
+function renderMonthNav(T){
+  const groups=[{season:'Glacies Disciplinae',months:[1,2,3]},{season:'Aetheria',months:[4,5,6]},{season:'Chronos Lux',months:[7,8,9]},{season:'Ferrum Tenebris',months:[10,11,12]}];
+  const gh=groups.map(g=>{
+    const c=SEASON_THEMES[g.season].navColor;
+    const btns=g.months.map(m=>{
+      const mo=monthObj(m);const act=S.month===m;
+      const style=act?`background:${c}22;border-color:${c}55;color:#f9fafb;font-weight:bold`:'';
+      return`<button class="mth-btn${act?' active':''}" style="${style}" onclick="setMonth(${m})">${mo.abbr||m}</button>`;
+    }).join('');
+    return`<div class="season-group"><div class="season-sname" style="color:${c}">${g.season}</div><div class="month-btns">${btns}</div></div>`;
+  }).join('');
+  return`<div class="sb-block"><div class="sb-title">NAVIGATION</div>${gh}<button class="sil-btn${S.month===13?' active':''}" onclick="setMonth(13)">◈ Jours du Silence</button></div>`;
+}
+
+function renderFetesSidebar(){
+  return`<div class="sb-block"><div class="sb-title">DATES MARQUÉES</div>${S.events.map(e=>{
+    const M=monthObj(e.month);const dl=e.month===13?`JS-0${e.day}`:`${M.abbr||''} ${e.day}`;
+    const b=e.border_color||'#6b7280',bg=e.bg_color||'rgba(31,41,55,0.4)',t=e.text_color||'#d1d5db';
+    return`<div class="fete-card" style="border-color:${b}45;background:${bg}" onclick="selectDay(${e.day})">
+      <div class="fete-top"><span style="color:${t}">${e.faction_name||'—'}</span><span class="fete-day">${dl}</span></div>
+      <div class="fete-name">${e.name}</div></div>`;
+  }).join('')}</div>`;
+}
+
+function renderDayPanel(biss){
+  const day=S.day;const M=monthObj(S.month);const evts=eventsForDay(day);
+  const decade=S.month<13?Math.ceil(day/10):null;const dID=S.month<13?((day-1)%10)+1:null;
+  const jds=S.month===13?silenceDay(day):null;
+  const meta=S.month<13?`${M.name} · Décade ${decade} · Jour ${dID} &nbsp;|&nbsp; ${2413+S.an} grégorien`:(jds?`${jds.name} · ${jds.sub}`:'');
+  const cards=evts.length?evts.map(e=>{
+    const b=e.border_color||'#6b7280',bg=e.bg_color||'rgba(31,41,55,0.4)',t=e.text_color||'#d1d5db';
+    const rl=e.recurrence&&e.recurrence!=='none'?RECUR_LABELS[e.recurrence]:e.is_annual?RECUR_LABELS['annual']:'';
+    const sn=e.name.replace(/'/g,"\\'").replace(/"/g,'&quot;');
+    return`<div class="evt-card" style="border-color:${b}55;background:${bg}">
+      <div class="evt-main">
+        <div class="evt-faction" style="color:${t}">${e.faction_name||'—'}</div>
+        <div class="evt-name">${e.name}${rl?`<span class="recur-badge">${rl}</span>`:''}</div>
+        ${e.description?`<div class="evt-desc">${e.description}</div>`:''}
+        ${!e.is_annual&&e.an!==null?`<div class="evt-meta">AN ${e.an}</div>`:''}
+      </div>
+      <div class="evt-actions">
+        <button class="ic-btn" title="Modifier" onclick="openEventModal(${e.id})">✎</button>
+        <button class="ic-btn" title="Dupliquer" onclick="duplicateEvent(${e.id})">⧉</button>
+        <button class="ic-btn del" title="Supprimer" onclick="confirmDelete(${e.id},'${sn}')">✕</button>
+      </div></div>`;
+  }).join(''):`<div class="no-evt">Aucun événement enregistré.</div>`;
+  return`<div class="day-panel">
+    <div class="dp-top">
+      <div><div class="dp-date">${formatDate(S.an,S.month,day)}</div><div class="dp-meta">${meta}</div></div>
+      <button class="add-btn" onclick="openEventModal(null,${day})">+ Ajouter</button>
+    </div><div class="evt-list">${cards}</div></div>`;
+}
+
+function renderLegend(){
+  document.getElementById('legend').innerHTML=S.factions.map(f=>`<div class="leg-item"><span class="leg-dot" style="background:${f.border_color}"></span>${f.name}</div>`).join('');
+}
+
+/* TIMELINE */
+function tlFiltered(){
+  const fid=document.getElementById('tl-filter-faction').value;
+  const q=(document.getElementById('tl-search').value||'').toLowerCase();
+  return S.allEvents.filter(e=>{
+    if(e.is_annual&&e.recurrence==='annual')return false;
+    if(fid&&String(e.faction_id)!==fid)return false;
+    if(q&&!e.name.toLowerCase().includes(q)&&!(e.description||'').toLowerCase().includes(q))return false;
+    return true;
+  }).sort((a,b)=>((a.an??0)*10000+(a.month*100)+a.day)-((b.an??0)*10000+(b.month*100)+b.day));
+}
+
+function renderTimeline(){
+  const sel=document.getElementById('tl-filter-faction');
+  const cur=sel.value;
+  sel.innerHTML='<option value="">Toutes les factions</option>'+S.factions.map(f=>`<option value="${f.id}">${f.name}</option>`).join('');
+  sel.value=cur;
+  const evts=tlFiltered();
+  S.tlTab==='list'?renderTLList(evts):renderTLAxis(evts);
+}
+
+function renderTLList(evts){
+  document.getElementById('tl-list').innerHTML=evts.length?evts.map(e=>{
+    const b=e.border_color||'#6b7280',t=e.text_color||'#d1d5db';
+    const M=monthObj(e.month);
+    const ds=e.month===13?`AN-${e.an} · JS-0${e.day}`:`AN-${e.an} · ${M.name||''} ${e.day}`;
+    return`<div class="tl-list-item" style="border-left-color:${b}">
+      <div class="tl-list-date">${ds}</div>
+      <div style="flex:1">
+        <div class="tl-list-name">${e.name}</div>
+        <div class="tl-list-faction" style="color:${t}">${e.faction_name||'—'}</div>
+        ${e.description?`<div class="tl-list-desc">${e.description}</div>`:''}
+      </div></div>`;
+  }).join(''):`<div class="no-evt" style="padding:30px;text-align:center">Aucun événement historique.</div>`;
+}
+
+function renderTLAxis(evts){
+  const inner=document.getElementById('tl-h-inner');
+  if(!evts.length){inner.innerHTML='<div class="tl-axis"></div><div style="text-align:center;padding:50px;color:var(--muted)">Aucun événement.</div>';return}
+  const years=evts.map(e=>e.an??0);
+  const minY=Math.min(...years),maxY=Math.max(...years);
+  const span=Math.max(maxY-minY,10);
+  const W=Math.max(900,span*14);
+  inner.style.width=W+'px';
+  const xOf=an=>((an??0)-minY)/span*(W-100)+50;
+  const tip=document.getElementById('tl-tooltip');
+
+  const step=span<=30?5:span<=100?10:span<=300?25:span<=600?50:100;
+  let marks='';
+  for(let y=Math.ceil(minY/step)*step;y<=maxY;y+=step){
+    const x=xOf(y);
+    marks+=`<div class="tl-year-mark" style="left:${x}px">AN ${y}</div><div class="tl-year-tick" style="left:${x}px"></div>`;
+  }
+  let dots='',labels='';
+  evts.forEach((e,i)=>{
+    const x=xOf(e.an??0);const c=e.border_color||'#6b7280';
+    const above=i%2===0;
+    const sn=e.name.replace(/'/g,"\\'").replace(/"/g,'&quot;');
+    const sd=(e.description||'').substring(0,80).replace(/'/g,"\\'").replace(/"/g,'&quot;');
+    const sf=(e.faction_name||'').replace(/'/g,"\\'");
+    dots+=`<div class="tl-dot" style="left:${x}px;background:${c}"
+      onmouseenter="showTip(event,'${sn}','${sf}',${e.an},'${sd}')"
+      onmouseleave="hideTip()"
+      onclick="openEventModal(${e.id})"></div>`;
+    labels+=`<div class="tl-label" style="left:${x}px;${above?'bottom:calc(52% + 4px)':'top:calc(52% + 4px)'};color:${c}"
+      onclick="openEventModal(${e.id})">${e.name}</div>`;
+  });
+  inner.innerHTML=`<div class="tl-axis"></div>${marks}${dots}${labels}`;
+}
+
+function showTip(ev,name,fac,an,desc){
+  const t=document.getElementById('tl-tooltip');
+  t.innerHTML=`<div style="font-weight:bold;margin-bottom:4px">${name}</div><div style="color:var(--muted);font-size:11px">AN ${an} · ${fac||'—'}</div>${desc?`<div style="margin-top:5px;font-size:11px;color:var(--muted)">${desc}…</div>`:''}`;
+  t.classList.remove('hidden');t.style.left=(ev.clientX+12)+'px';t.style.top=(ev.clientY-10)+'px';
+}
+function hideTip(){document.getElementById('tl-tooltip').classList.add('hidden')}
+
+/* FACTION TABLE */
+function renderFactionTable(){
+  const tbl=document.getElementById('faction-table');
+  if(!S.factions.length){tbl.innerHTML='<tr><td style="padding:20px;color:var(--muted)">Aucune faction.</td></tr>';return}
+  const mh=S.months.map(m=>`<th class="month-th">${m.abbr||m.num}</th>`).join('');
+  let html=`<thead><tr><th>FACTION</th>${mh}</tr></thead><tbody>`;
+  S.factions.forEach(f=>{
+    const b=f.border_color||'#6b7280',bg=f.bg_color||'rgba(31,41,55,0.4)',t=f.text_color||'#d1d5db';
+    html+=`<tr><td class="ft-faction-cell" style="color:${t};border-left:3px solid ${b}">${f.name}</td>`;
+    S.months.forEach(m=>{
+      const cells=S.allEvents.filter(e=>e.faction_id===f.id&&e.month===m.num);
+      if(!cells.length){html+=`<td><span class="ft-empty">·</span></td>`;return}
+      const chips=cells.map(e=>{
+        const lbl=e.is_annual?`${e.name} ◎`:(e.an!==null?`AN${e.an}·${e.name}`:e.name);
+        return`<span class="ft-evt-chip" style="background:${bg};border-color:${b}44;color:${t}" title="${e.description||''}" onclick="jumpToEvent(${e.id})">${lbl}</span>`;
+      }).join('');
+      html+=`<td>${chips}</td>`;
+    });
+    html+=`</tr>`;
+  });
+  html+=`</tbody>`;tbl.innerHTML=html;
+}
+
+async function jumpToEvent(id){
+  const e=S.allEvents.find(x=>x.id===id);if(!e)return;
+  S.an=e.an??S.an;S.month=e.month;S.day=e.day;
+  setView('cal');await loadEvents();render();
+}
+
+/* PDF EXPORT */
+function exportPDF(){
+  const w=window.open('','_blank');
+  const M=monthObj(S.month);const biss=isBissextile(S.an);const greg=2413+S.an;
+  const mRows=S.events.length?S.events.map(e=>{
+    const mo=monthObj(e.month);const dl=e.month===13?`JS-0${e.day}`:`${mo.abbr||''} ${e.day}`;
+    const rl=e.recurrence&&e.recurrence!=='none'?` [${RECUR_LABELS[e.recurrence]}]`:e.is_annual?' [◎ ANNUEL]':'';
+    return`<tr><td>${dl}</td><td><strong>${e.name}</strong>${rl}</td><td>${e.faction_name||'—'}</td><td>${e.description||''}</td></tr>`;
+  }).join(''):`<tr><td colspan="4" style="color:#6b7280;font-style:italic">Aucun événement ce mois.</td></tr>`;
+
+  const annEvts=S.allEvents.filter(e=>e.is_annual||e.recurrence==='annual');
+  const annRows=annEvts.length?annEvts.map(e=>{
+    const mo=S.months.find(m=>m.num===e.month)||{name:'',abbr:''};
+    return`<tr><td>${mo.name} ${e.day}</td><td><strong>${e.name}</strong></td><td>${e.faction_name||'—'}</td><td>${e.description||''}</td></tr>`;
+  }).join(''):`<tr><td colspan="4">—</td></tr>`;
+
+  const histEvts=S.allEvents.filter(e=>!e.is_annual&&e.recurrence!=='annual').sort((a,b)=>((a.an??0)*10000+(a.month*100)+a.day)-((b.an??0)*10000+(b.month*100)+b.day));
+  const histRows=histEvts.length?histEvts.map(e=>{
+    const mo=S.months.find(m=>m.num===e.month)||{name:'',abbr:''};
+    const ds=e.month===13?`AN-${e.an}/JS-0${e.day}`:`AN-${e.an}/${mo.name} ${e.day}`;
+    const rl=e.recurrence&&e.recurrence!=='none'?` [${RECUR_LABELS[e.recurrence]}]`:'';
+    return`<tr><td>${ds}</td><td><strong>${e.name}</strong>${rl}</td><td>${e.faction_name||'—'}</td><td>${e.description||''}</td></tr>`;
+  }).join(''):`<tr><td colspan="4" style="color:#6b7280;font-style:italic">Aucun événement historique.</td></tr>`;
+
+  const facLegend=S.factions.map(f=>`<span style="display:inline-flex;align-items:center;gap:5px;margin:3px 8px 3px 0"><span style="width:10px;height:10px;border-radius:50%;background:${f.border_color};display:inline-block"></span>${f.name}</span>`).join('');
+
+  w.document.write(`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Calendrier de la Rectitude — Export PDF</title>
+  <style>body{font-family:'Courier New',monospace;font-size:12px;color:#111;padding:30px;max-width:960px;margin:0 auto}
+  h1{font-size:20px;text-align:center;letter-spacing:.2em;text-transform:uppercase;margin-bottom:4px}
+  .sub{text-align:center;font-size:10px;color:#6b7280;letter-spacing:.3em;margin-bottom:5px}
+  h2{font-size:14px;letter-spacing:.15em;text-transform:uppercase;border-bottom:2px solid #111;padding-bottom:4px;margin:24px 0 12px}
+  table{width:100%;border-collapse:collapse;margin-bottom:16px}
+  th{background:#f1f5f9;padding:7px 8px;text-align:left;font-size:10px;letter-spacing:.1em;border-bottom:2px solid #374151}
+  td{padding:6px 8px;border-bottom:1px solid #e2e8f0;vertical-align:top;font-size:11px}
+  tr:last-child td{border-bottom:none}
+  .legend-box{margin-bottom:20px;font-size:11px;padding:10px;border:1px solid #e2e8f0;border-radius:6px}
+  @media print{body{padding:10px}}</style></head><body>
+  <h1>◈ Calendrier de la Rectitude ◈</h1>
+  <div class="sub">CONSEIL DES GOUVERNANCES UNIES · SYSTÈME TEMPOREL OFFICIEL</div>
+  <div class="sub">Export — AN ${S.an} (${greg} grégorien)${biss?' · ANNÉE BISSEXTILE':''}</div>
+  <div class="legend-box"><strong style="font-size:10px;letter-spacing:.1em">FACTIONS : </strong>${facLegend}</div>
+  <h2>Mois courant — ${M.name||'Jours du Silence'} · AN-${String(S.an).padStart(4,'0')}</h2>
+  <table><thead><tr><th>DATE</th><th>ÉVÉNEMENT</th><th>FACTION</th><th>DESCRIPTION</th></tr></thead><tbody>${mRows}</tbody></table>
+  <h2>Événements annuels récurrents</h2>
+  <table><thead><tr><th>DATE</th><th>ÉVÉNEMENT</th><th>FACTION</th><th>DESCRIPTION</th></tr></thead><tbody>${annRows}</tbody></table>
+  <h2>Chronologie historique complète</h2>
+  <table><thead><tr><th>DATE</th><th>ÉVÉNEMENT</th><th>FACTION</th><th>DESCRIPTION</th></tr></thead><tbody>${histRows}</tbody></table>
+  <script>window.onload=()=>window.print()<\/script></body></html>`);
+  w.document.close();
+}
+
+function importCSV(){
+  const input = document.getElementById('csv-input');
+  input.value = '';
+  input.click();
+}
+
+async function handleCSVFile(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  const form = new FormData();
+  form.append('file', file);
+  try {
+    const response = await fetch('/api/events/import', { method: 'POST', body: form });
+    const data = await response.json();
+    if(!response.ok){
+      throw new Error(data.error || 'Import impossible');
+    }
+    toast(`${data.imported} événements importés`, 'ok');
+    if(data.errors && data.errors.length){
+      alert('Import terminé avec erreurs:\n' + data.errors.join('\n'));
+    }
+    await loadEvents();
+    await loadAllEvents();
+    render();
+  } catch(err) {
+    toast('Erreur import CSV', 'err');
+    console.error(err);
+  }
+}
+
+/* NAVIGATION */
+async function navigate(delta){let m=S.month+delta,a=S.an;if(m<1){m=13;a--}if(m>13){m=1;a++}S.month=m;S.an=a;S.day=null;await loadEvents();render()}
+async function setYear(val){const v=parseInt(val,10);if(isNaN(v))return;S.an=v;S.day=null;await loadEvents();render()}
+async function setMonth(m){S.month=m;S.day=null;await loadEvents();render()}
+async function selectDay(d){S.day=S.day===d?null:d;render()}
+
+/* EVENT MODAL */
+function onRecurChange(){
+  const r=document.getElementById('evt-recurrence').value;
+  const yg=document.getElementById('evt-year-group');
+  const ng=document.getElementById('recur-n-group');
+  const nl=document.getElementById('recur-n-label');
+  yg.style.opacity=r==='annual'?'0.35':'1';
+  yg.style.pointerEvents=r==='annual'?'none':'';
+  if(r==='every_n_years'){ng.style.display='block';nl.textContent='INTERVALLE (N ans)'}
+  else if(r==='monthly'){ng.style.display='block';nl.textContent='TOUS LES N MOIS (vide = chaque mois)'}
+  else{ng.style.display='none'}
+}
+function updateDayMax(){
+  const m=parseInt(document.getElementById('evt-month').value,10);
+  const an=parseInt(document.getElementById('evt-an').value||S.an);
+  document.getElementById('evt-day').max=m===13?(isBissextile(an)?6:5):30;
+}
+function openEventModal(id=null,preDay=null){
+  const fs=document.getElementById('evt-faction');
+  fs.innerHTML='<option value="">— Aucune —</option>'+S.factions.map(f=>`<option value="${f.id}">${f.name}</option>`).join('');
+  const ms=document.getElementById('evt-month');
+  ms.innerHTML=S.months.map(m=>`<option value="${m.num}">${String(m.num).padStart(2,'0')} — ${m.name}</option>`).join('');
+  if(id!==null){
+    const e=S.events.find(x=>x.id===id)||S.allEvents.find(x=>x.id===id);if(!e)return;
+    document.getElementById('evt-title').textContent="Modifier l'Événement";
+    document.getElementById('evt-id').value=e.id;
+    document.getElementById('evt-name').value=e.name;
+    document.getElementById('evt-desc').value=e.description||'';
+    document.getElementById('evt-faction').value=e.faction_id||'';
+    document.getElementById('evt-recurrence').value=e.recurrence||(e.is_annual?'annual':'none');
+    document.getElementById('evt-recur-n').value=e.recur_n||'';
+    document.getElementById('evt-an').value=e.an??S.an;
+    document.getElementById('evt-month').value=e.month;
+    document.getElementById('evt-day').value=e.day;
+  }else{
+    document.getElementById('evt-title').textContent='Nouvel Événement';
+    document.getElementById('evt-id').value='';document.getElementById('evt-form').reset();
+    document.getElementById('evt-recurrence').value='none';document.getElementById('evt-recur-n').value='';
+    document.getElementById('evt-an').value=S.an;document.getElementById('evt-month').value=S.month;
+    document.getElementById('evt-day').value=preDay??S.day??1;
+  }
+  onRecurChange();updateDayMax();document.getElementById('evt-backdrop').classList.remove('hidden');
+}
+document.getElementById('evt-form').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const id=document.getElementById('evt-id').value;
+  const recur=document.getElementById('evt-recurrence').value;
+  const payload={
+    name:document.getElementById('evt-name').value.trim(),
+    description:document.getElementById('evt-desc').value.trim()||null,
+    faction_id:parseInt(document.getElementById('evt-faction').value)||null,
+    recurrence:recur,recur_n:parseInt(document.getElementById('evt-recur-n').value)||null,
+    is_annual:recur==='annual',
+    an:recur==='annual'?null:(parseInt(document.getElementById('evt-an').value)||S.an),
+    month:parseInt(document.getElementById('evt-month').value),
+    day:parseInt(document.getElementById('evt-day').value),
+  };
+  if(!payload.name)return;
+  try{
+    if(id){await api.put(`/api/events/${id}`,payload);toast('Événement modifié','ok')}
+    else{await api.post('/api/events',payload);toast('Événement créé','ok')}
+    closeModal('evt-backdrop');if(payload.month===S.month){await loadEvents()}render();
+  }catch(err){toast('Erreur : '+err.message,'err')}
+});
+
+/* DUPLICATE / DELETE */
+async function duplicateEvent(id){try{await api.post(`/api/events/${id}/duplicate`,{});toast('Dupliqué','ok');await loadEvents();render()}catch(err){toast('Erreur','err')}}
+function confirmDelete(id,name){if(!confirm(`Supprimer "${name}" ?`))return;deleteEvent(id)}
+async function deleteEvent(id){
+  try{await api.del(`/api/events/${id}`);toast('Supprimé','ok');
+  if(S.day!==null&&!S.events.some(e=>e.id!==id&&e.day===S.day))S.day=null;
+  await loadEvents();render()}catch(err){toast('Erreur','err')}
+}
+
+/* MONTH MODAL */
+function openMonthModal(){
+  document.getElementById('months-tbody').innerHTML=S.months.map(m=>{
+    const so=['',...SEASONS_LIST].map(s=>`<option value="${s}" ${m.season===s?'selected':''}>${s||'— (Hors-saison)'}</option>`).join('');
+    return`<tr><td style="color:var(--muted);text-align:center">${m.num}</td>
+      <td><input type="text" value="${m.name}" id="mname-${m.num}"></td>
+      <td><input type="text" value="${m.abbr}" id="mabbr-${m.num}" style="width:64px"></td>
+      <td><select id="mseas-${m.num}">${so}</select></td>
+      <td><button class="save-row-btn" onclick="saveMonth(${m.num})">✓</button></td></tr>`;
+  }).join('');
+  document.getElementById('month-backdrop').classList.remove('hidden');
+}
+async function saveMonth(num){
+  const d={name:document.getElementById(`mname-${num}`).value.trim(),abbr:document.getElementById(`mabbr-${num}`).value.trim(),season:document.getElementById(`mseas-${num}`).value||null};
+  if(!d.name||!d.abbr)return;
+  try{await api.put(`/api/months/${num}`,d);toast(`Mois ${num} mis à jour`,'ok');await loadConfig();render()}catch(err){toast('Erreur','err')}
+}
+
+/* SILENCE MODAL */
+function openSilenceModal(){
+  document.getElementById('silence-editor-list').innerHTML=S.silenceDays.map(j=>`
+    <div class="sil-edit-row${j.fantome?' fantome':''}">
+      <span class="sil-edit-num">${j.num}${j.fantome?' ⚠':''}</span>
+      <input type="text" id="sname-${j.num}" value="${j.name}" placeholder="Nom du jour">
+      <input type="text" id="ssub-${j.num}" value="${j.sub}" placeholder="Sous-titre">
+      <button class="save-row-btn" onclick="saveSilenceDay(${j.num})">✓</button>
+    </div>`).join('');
+  document.getElementById('silence-backdrop').classList.remove('hidden');
+}
+async function saveSilenceDay(num){
+  const d={name:document.getElementById(`sname-${num}`).value.trim(),sub:document.getElementById(`ssub-${num}`).value.trim()};
+  if(!d.name)return;
+  try{await api.put(`/api/silence/${num}`,d);toast(`Jour ${num} mis à jour`,'ok');await loadConfig();render()}catch(err){toast('Erreur','err')}
+}
+
+/* FACTION MODAL */
+function openFactionModal(){renderFacList();document.getElementById('fac-backdrop').classList.remove('hidden')}
+function renderFacList(){
+  document.getElementById('fac-list').innerHTML=S.factions.map(f=>`
+    <div class="fac-row">
+      <div class="fac-row-top">
+        <input type="text" value="${f.name}" id="fname-${f.id}" placeholder="Nom">
+        <input type="color" value="${f.border_color}" id="fborder-${f.id}" title="Bordure">
+        <input type="color" value="${f.text_color}" id="ftext-${f.id}" title="Texte">
+        <button class="save-row-btn" onclick="saveFaction(${f.id})">✓</button>
+        <button class="ic-btn del" onclick="deleteFaction(${f.id},'${f.name.replace(/'/g,"\\'")}')">✕</button>
+      </div>
+      <div class="fac-row-bg">
+        <label>BG</label>
+        <input type="text" value="${f.bg_color}" id="fbg-${f.id}" oninput="updateFacPrev(${f.id})">
+        <span class="fac-preview" id="fprev-${f.id}" style="background:${f.bg_color};border-color:${f.border_color}"></span>
+      </div>
+    </div>`).join('');
+}
+function updateFacPrev(id){const bg=document.getElementById(`fbg-${id}`).value,b=document.getElementById(`fborder-${id}`).value,p=document.getElementById(`fprev-${id}`);if(p){p.style.background=bg;p.style.borderColor=b}}
+async function saveFaction(id){
+  const d={name:document.getElementById(`fname-${id}`).value.trim(),border_color:document.getElementById(`fborder-${id}`).value,text_color:document.getElementById(`ftext-${id}`).value,bg_color:document.getElementById(`fbg-${id}`).value.trim()};
+  if(!d.name)return;
+  try{await api.put(`/api/factions/${id}`,d);toast('Faction mise à jour','ok');await loadConfig();await loadEvents();renderFacList();render()}catch(err){toast('Erreur','err')}
+}
+async function deleteFaction(id,name){
+  if(!confirm(`Supprimer "${name}" ?\nLes événements liés perdront leur faction.`))return;
+  try{await api.del(`/api/factions/${id}`);toast('Faction supprimée','ok');await loadConfig();await loadEvents();renderFacList();render()}catch(err){toast('Erreur','err')}
+}
+async function createFaction(){
+  const name=document.getElementById('new-fac-name').value.trim();if(!name){toast('Nom requis','err');return}
+  const d={name,border_color:document.getElementById('new-fac-border').value,text_color:document.getElementById('new-fac-text').value,bg_color:document.getElementById('new-fac-bg').value.trim()||'rgba(31,41,55,0.4)'};
+  try{await api.post('/api/factions',d);toast('Faction créée','ok');document.getElementById('new-fac-name').value='';document.getElementById('new-fac-bg').value='';await loadConfig();await loadEvents();renderFacList();render()}catch(err){toast('Erreur','err')}
+}
+
+function closeModal(id){document.getElementById(id).classList.add('hidden')}
+function backdropClose(e,id){if(e.target.id===id)closeModal(id)}
+function toast(msg,type='ok'){const el=document.createElement('div');el.className=`toast ${type}`;el.textContent=(type==='ok'?'✓ ':'✕ ')+msg;document.getElementById('toasts').appendChild(el);setTimeout(()=>el.remove(),3200)}
+
+async function init(){await loadConfig();await loadEvents();await loadAllEvents();await loadVersion();render();setTLTab('list')}
+init();
+</script>
+</body>
+</html>
