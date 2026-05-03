@@ -229,6 +229,19 @@ input,select,textarea{font-family:inherit;font-size:inherit}
 .toast.ok{border-color:#16a34a;background:rgba(20,83,45,0.85);color:#bbf7d0}
 .toast.err{border-color:#dc2626;background:rgba(127,29,29,0.85);color:#fecaca}
 @keyframes fadeInUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.tl-controls{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.tl-range-select{padding:8px 10px;background:var(--bg2);border:1px solid var(--border);border-radius:7px;color:var(--txt2);font-size:13px;min-width:140px}
+.tl-range-summary{font-size:12px;color:var(--muted);margin-bottom:10px}
+.tl-group-title{font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;margin:18px 0 8px;letter-spacing:.08em}
+.tl-list-item{padding:14px 14px;margin-bottom:10px;border:1px solid var(--border);border-radius:9px;background:var(--card);box-shadow:0 1px 3px rgba(0,0,0,0.06)}
+.tl-list-date{font-size:12px;color:var(--muted);margin-bottom:4px}
+.tl-list-name{font-size:15px;font-weight:700;color:var(--txt2)}
+.tl-list-faction{font-size:12px;color:var(--accent)}
+.tl-list-desc{font-size:13px;color:var(--muted);line-height:1.5}
+.tl-h-outer{overflow-x:auto;padding-bottom:12px}
+.tl-h-inner{min-width:900px;position:relative;overflow:visible}
+.tl-year-mark{position:absolute;top:0;transform:translateX(-50%);font-size:11px;color:var(--muted);white-space:nowrap}
+.tl-year-tick{position:absolute;top:16px;width:1px;height:10px;background:var(--muted)}
 .tl-tooltip{position:fixed;z-index:300;background:var(--modal-bg);border:1px solid var(--border2);border-radius:6px;padding:8px 12px;font-size:12px;max-width:240px;pointer-events:none;box-shadow:0 4px 14px rgba(0,0,0,0.5)}
 .tl-tooltip.hidden{display:none}
 </style>
@@ -247,16 +260,26 @@ input,select,textarea{font-family:inherit;font-size:inherit}
     <button class="btn-sm" onclick="openFactionModal()">⬡ Factions</button>
     <button class="btn-sm" onclick="importCSV()">⬆ CSV</button>
     <button class="btn-sm" onclick="window.location.href='/api/events/export'">⬇ CSV</button>
+    <button class="btn-sm" onclick="importTimelineCSV()">⬆ Timeline</button>
+    <button class="btn-sm" onclick="window.location.href='/api/events/export-timeline'">⬇ Timeline</button>
+    <button class="btn-sm" onclick="importEntitiesCSV()">⬆ Entités</button>
+    <button class="btn-sm" onclick="importRelationsCSV()">⬆ Relations</button>
     <button class="btn-sm" onclick="exportPDF()">⬇ PDF</button>
     <button class="btn-sm" onclick="window.location.href='/about'">ℹ️ À propos</button>
     <button class="btn-sm" onclick="window.location.href='/changelog'">📝 Changelog</button>
-    <button class="theme-btn" onclick="toggleTheme()" id="theme-btn">☀ Clair</button>
+    <button class="theme-btn" onclick="toggleTheme()" id="theme-btn">🌙 Sombre</button>
   </div>
   <input type="file" id="csv-input" accept=".csv,text/csv" style="display:none" onchange="handleCSVFile(event)">
+  <input type="file" id="timeline-csv-input" accept=".csv,text/csv" style="display:none" onchange="handleTimelineCSVFile(event)">
+  <input type="file" id="entities-csv-input" accept=".csv,text/csv" style="display:none" onchange="handleEntitiesCSVFile(event)">
+  <input type="file" id="entities-timeline-csv-input" accept=".csv,text/csv" style="display:none" onchange="handleEntitiesTimelineCSVFile(event)">
+  <input type="file" id="relations-csv-input" accept=".csv,text/csv" style="display:none" onchange="handleRelationsCSVFile(event)">
+  <input type="file" id="relations-timeline-csv-input" accept=".csv,text/csv" style="display:none" onchange="handleRelationsTimelineCSVFile(event)">
   <div class="view-tabs">
     <button class="vtab active" id="tab-cal"      onclick="setView('cal')">📅 Calendrier</button>
     <button class="vtab"        id="tab-timeline" onclick="setView('timeline')">⟷ Timeline</button>
     <button class="vtab"        id="tab-factions" onclick="setView('factions')">⬡ Par faction</button>
+    <button class="vtab"        id="tab-entities" onclick="setView('entities')">⛓ Réseau</button>
   </div>
   <div id="view-cal"><div id="app"></div><div class="legend" id="legend"></div></div>
   <div id="view-timeline" style="display:none">
@@ -266,17 +289,48 @@ input,select,textarea{font-family:inherit;font-size:inherit}
           <option value="">Toutes les factions</option>
         </select>
         <input class="tl-search" id="tl-search" placeholder="Rechercher un événement…" oninput="renderTimeline()">
+        <select class="tl-range-select" id="tl-range-select" onchange="setTLRange(this.value)">
+          <option value="era">Ére</option>
+          <option value="year">Année</option>
+          <option value="month">Mois</option>
+          <option value="day">Jour</option>
+        </select>
         <div style="display:flex;gap:6px;margin-left:auto">
           <button class="btn-sm" id="tl-tab-list" onclick="setTLTab('list')">☰ Liste</button>
           <button class="btn-sm" id="tl-tab-axis" onclick="setTLTab('axis')">⟷ Axe</button>
         </div>
       </div>
+      <div class="tl-range-summary" id="tl-range-summary">Affichage : Ére</div>
       <div id="tl-list-view"><div class="tl-list" id="tl-list"></div></div>
       <div id="tl-axis-view" style="display:none"><div class="tl-h-outer"><div class="tl-h-inner" id="tl-h-inner"><div class="tl-axis"></div></div></div></div>
     </div>
   </div>
   <div id="view-factions" style="display:none">
     <div class="faction-view"><div class="faction-table-wrap"><table class="faction-table" id="faction-table"></table></div></div>
+  </div>
+  <div id="view-entities" style="display:none">
+    <div class="sb-block" style="margin-bottom:16px">
+      <div class="sb-title">Entités</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">
+        <button class="add-btn" onclick="openEntityModal()">+ Nouvelle entité</button>
+        <button class="btn-sm" onclick="importEntitiesCSV()">⬆ Entités CSV</button>
+        <button class="btn-sm" onclick="importEntitiesTimeline()">⬆ Entités Timeline</button>
+        <button class="btn-sm" onclick="exportEntitiesCSV()">⬇ Entités CSV</button>
+        <button class="btn-sm" onclick="exportEntitiesTimeline()">⬇ Entités Timeline</button>
+      </div>
+      <div id="entities-list"></div>
+    </div>
+    <div class="sb-block">
+      <div class="sb-title">Relations</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">
+        <button class="add-btn" onclick="openRelationModal()">+ Nouvelle relation</button>
+        <button class="btn-sm" onclick="importRelationsCSV()">⬆ Relations CSV</button>
+        <button class="btn-sm" onclick="importRelationsTimeline()">⬆ Relations Timeline</button>
+        <button class="btn-sm" onclick="exportRelationsCSV()">⬇ Relations CSV</button>
+        <button class="btn-sm" onclick="exportRelationsTimeline()">⬇ Relations Timeline</button>
+      </div>
+      <div id="relations-list"></div>
+    </div>
   </div>
 </div>
 <div class="tl-tooltip hidden" id="tl-tooltip"></div>
@@ -366,6 +420,39 @@ input,select,textarea{font-family:inherit;font-size:inherit}
   </div>
 </div>
 
+<!-- ENTITY MODAL -->
+<div class="backdrop hidden" id="entity-backdrop" onclick="backdropClose(event,'entity-backdrop')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closeModal('entity-backdrop')">✕</button>
+    <h2 id="entity-title">Nouvelle entité</h2>
+    <form id="entity-form">
+      <input type="hidden" id="entity-id">
+      <div class="form-group"><label>NOM *</label><input type="text" id="entity-name" required placeholder="Ex : Spire 47"></div>
+      <div class="form-group"><label>TYPE *</label><select id="entity-type"><option value="Lieu">Lieu</option><option value="Personnage">Personnage</option><option value="Planète">Planète</option></select></div>
+      <div class="form-group"><label>DESCRIPTION</label><textarea id="entity-description" placeholder="Résumé, rôle, particularités…"></textarea></div>
+      <div class="form-group"><label>FACTION</label><select id="entity-faction"><option value="">— Aucune —</option></select></div>
+      <div class="modal-actions"><button type="button" class="btn-cancel" onclick="closeModal('entity-backdrop')">Annuler</button><button type="submit" class="btn-primary">Enregistrer</button></div>
+    </form>
+  </div>
+</div>
+
+<!-- RELATION MODAL -->
+<div class="backdrop hidden" id="relation-backdrop" onclick="backdropClose(event,'relation-backdrop')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closeModal('relation-backdrop')">✕</button>
+    <h2 id="relation-title">Nouvelle relation</h2>
+    <form id="relation-form">
+      <input type="hidden" id="relation-id">
+      <div class="form-group"><label>ENTITÉ SOURCE *</label><select id="relation-source"></select></div>
+      <div class="form-group"><label>ENTITÉ CIBLE *</label><select id="relation-target"></select></div>
+      <div class="form-group"><label>ALIGNEMENT *</label><select id="relation-alignment"><option value="friend">Ami</option><option value="enemy">Ennemi</option><option value="neutral">Neutre</option></select></div>
+      <div class="form-group"><label>TYPE DE RELATION *</label><select id="relation-type"><option value="war">Guerre</option><option value="peace">Paix</option><option value="espionage">Espionnage</option><option value="commerce">Commerce</option><option value="protectorate">Protectorat</option><option value="surveillance">Surveillance</option><option value="vigilance">Vigilance</option><option value="neutral">Neutre</option></select></div>
+      <div class="form-group"><label>DESCRIPTION</label><textarea id="relation-description" placeholder="Contexte de la relation…"></textarea></div>
+      <div class="modal-actions"><button type="button" class="btn-cancel" onclick="closeModal('relation-backdrop')">Annuler</button><button type="submit" class="btn-primary">Enregistrer</button></div>
+    </form>
+  </div>
+</div>
+
 <script>
 const SEASON_THEMES={
   'Glacies Disciplinae':{bg:'#060d1f',accent:'#3b82f6',txt:'#93c5fd',hover:'rgba(30,58,95,0.55)',sel:'#1d4ed8',cborder:'rgba(59,130,246,0.22)',label:'❄  Glacies Disciplinae — Hiver · Discipline froide',navColor:'#3b82f6'},
@@ -377,7 +464,7 @@ const SEASON_THEMES={
 const SEASONS_LIST=['Glacies Disciplinae','Aetheria','Chronos Lux','Ferrum Tenebris'];
 const RECUR_LABELS={none:'',annual:'◎ ANNUEL',monthly:'◎ MENSUEL',decadal:'◎ DÉCADAL',every_n_years:'◎ N ANS'};
 
-const S={an:455,month:1,day:null,months:[],factions:[],events:[],silenceDays:[],allEvents:[],isLight:false,tlTab:'list',currentView:'cal'};
+const S={an:455,month:1,day:null,months:[],factions:[],events:[],silenceDays:[],allEvents:[],entities:[],relations:[],isLight:true,tlTab:'list',tlRange:'era',currentView:'cal'};
 
 const api={
   async get(u){const r=await fetch(u);if(!r.ok)throw new Error(r.statusText);return r.json()},
@@ -386,11 +473,30 @@ const api={
   async del(u){const r=await fetch(u,{method:'DELETE'});if(!r.ok)throw new Error(r.statusText);return r.json()},
 };
 
-function isBissextile(an){const g=2413+an;return(g%4===0&&g%100!==0)||g%400===0}
-function formatDate(an,month,day){const p=an<0?'-':'';return`AN-${p}${String(Math.abs(an)).padStart(4,'0')}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`}
+function gregorianYear(an){return 2413 + an}
+function isBissextile(an){const g=gregorianYear(an);return(g%4===0&&g%100!==0)||g%400===0}
+function isRectitudeYear(an){return gregorianYear(an) >= 2413}
+function displayYear(an){if(an===null||an===undefined)return 'Annuel';const g=gregorianYear(an);return g>=2413?`AN ${an} · ${g} grégorien`:`${g} grégorien`}
+function displayYearShort(an){if(an===null||an===undefined)return 'Annuel';const g=gregorianYear(an);return g>=2413?`AN ${an}`:`${g} gr.`}
+function displayCalendarLabel(an){return isRectitudeYear(an)?'Calendrier de la Rectitude':'Calendrier grégorien'}
+function formatDate(an,month,day){const g=gregorianYear(an);if(g<2413){if(month===13)return `JS-0${day} · ${g} gr.`;return `${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}-${g}`}const p=an<0?'-':'';return`AN-${p}${String(Math.abs(an)).padStart(4,'0')}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`}
 function monthObj(num){return S.months.find(m=>m.num===num)||{}}
 function monthTheme(num){if(S.isLight)return{...SEASON_THEMES[monthObj(num).season||null],bg:'#f1f5f9'};return SEASON_THEMES[monthObj(num).season]||SEASON_THEMES[null]}
 function eventsForDay(day){return S.events.filter(e=>e.day===day)}
+function setTLRange(r){S.tlRange=r;document.getElementById('tl-range-select').value=r;renderTimeline()}
+function tlRangeFilter(evts){
+  if(S.tlRange==='era')return evts
+  if(S.tlRange==='year')return evts.filter(e=>e.an===S.an)
+  if(S.tlRange==='month')return evts.filter(e=>e.month===S.month)
+  if(S.tlRange==='day'){const day=S.day||1;return evts.filter(e=>e.month===S.month&&e.day===day)}
+  return evts
+}
+function tlGroupLabel(e){
+  if(S.tlRange==='month')return `Jour ${e.day}`
+  if(S.tlRange==='year')return monthObj(e.month).name||`Mois ${e.month}`
+  if(S.tlRange==='day')return displayYearShort(e.an)
+  return displayYearShort(e.an)
+}
 function silenceDay(n){return S.silenceDays.find(d=>d.num===n)||{num:n,name:`JS-0${n}`,sub:''}}
 
 function applyTheme(T){
@@ -412,12 +518,13 @@ function toggleTheme(){
 /* VIEW SWITCHING */
 function setView(v){
   S.currentView=v;
-  ['cal','timeline','factions'].forEach(id=>{
+  ['cal','timeline','factions','entities'].forEach(id=>{
     document.getElementById('view-'+id).style.display=id===v?'block':'none';
     document.getElementById('tab-'+id).classList.toggle('active',id===v);
   });
   if(v==='timeline'){loadAllEvents().then(()=>renderTimeline())}
   if(v==='factions'){loadAllEvents().then(()=>renderFactionTable())}
+  if(v==='entities'){Promise.all([loadEntities(),loadRelations(),loadAllEvents()]).then(()=>renderEntitiesView())}
 }
 function setTLTab(t){
   S.tlTab=t;
@@ -437,13 +544,14 @@ async function loadVersion(){try{const d=await api.get('/api/version');document.
 /* RENDER CAL */
 function render(){
   const T=monthTheme(S.month);const M=monthObj(S.month);
-  const biss=isBissextile(S.an);const greg=2413+S.an;
+  const biss=isBissextile(S.an);const yearLabel=displayYear(S.an);
+  const calendarLabel=displayCalendarLabel(S.an);
   if(!S.isLight)applyTheme(T);
   document.getElementById('app').innerHTML=`
     ${renderNavBar(M,T)}
     <div class="season-bar">
       <span class="season-label">${T.label}</span>
-      <span>${greg<0?Math.abs(greg)+' av.':greg} grégorien${biss?'<span class="badge-biss">[BISSEXTILE]</span>':''}</span>
+      <span>${calendarLabel} · ${yearLabel}${biss?'<span class="badge-biss">[BISSEXTILE]</span>':''}</span>
     </div>
     <div class="main-grid">
       <div>${S.month<13?renderMonthGrid():renderSilence(biss)}</div>
@@ -526,7 +634,7 @@ function renderDayPanel(biss){
   const day=S.day;const M=monthObj(S.month);const evts=eventsForDay(day);
   const decade=S.month<13?Math.ceil(day/10):null;const dID=S.month<13?((day-1)%10)+1:null;
   const jds=S.month===13?silenceDay(day):null;
-  const meta=S.month<13?`${M.name} · Décade ${decade} · Jour ${dID} &nbsp;|&nbsp; ${2413+S.an} grégorien`:(jds?`${jds.name} · ${jds.sub}`:'');
+  const meta=S.month<13?`${M.name} · Décade ${decade} · Jour ${dID} · ${displayYear(S.an)}`:(jds?`${jds.name} · ${jds.sub} · ${displayYear(S.an)}`:'');
   const cards=evts.length?evts.map(e=>{
     const b=e.border_color||'#6b7280',bg=e.bg_color||'rgba(31,41,55,0.4)',t=e.text_color||'#d1d5db';
     const rl=e.recurrence&&e.recurrence!=='none'?RECUR_LABELS[e.recurrence]:e.is_annual?RECUR_LABELS['annual']:'';
@@ -535,8 +643,7 @@ function renderDayPanel(biss){
       <div class="evt-main">
         <div class="evt-faction" style="color:${t}">${e.faction_name||'—'}</div>
         <div class="evt-name">${e.name}${rl?`<span class="recur-badge">${rl}</span>`:''}</div>
-        ${e.description?`<div class="evt-desc">${e.description}</div>`:''}
-        ${!e.is_annual&&e.an!==null?`<div class="evt-meta">AN ${e.an}</div>`:''}
+        ${!e.is_annual&&e.an!==null?`<div class="evt-meta">${displayYearShort(e.an)}</div>`:''}
       </div>
       <div class="evt-actions">
         <button class="ic-btn" title="Modifier" onclick="openEventModal(${e.id})">✎</button>
@@ -564,7 +671,11 @@ function tlFiltered(){
     if(fid&&String(e.faction_id)!==fid)return false;
     if(q&&!e.name.toLowerCase().includes(q)&&!(e.description||'').toLowerCase().includes(q))return false;
     return true;
-  }).sort((a,b)=>((a.an??0)*10000+(a.month*100)+a.day)-((b.an??0)*10000+(b.month*100)+b.day));
+  }).sort((a,b)=>{
+    const ya=a.an!==null?gregorianYear(a.an):2413;
+    const yb=b.an!==null?gregorianYear(b.an):2413;
+    return (ya*10000+(a.month*100)+a.day)-(yb*10000+(b.month*100)+b.day);
+  });
 }
 
 function renderTimeline(){
@@ -572,45 +683,58 @@ function renderTimeline(){
   const cur=sel.value;
   sel.innerHTML='<option value="">Toutes les factions</option>'+S.factions.map(f=>`<option value="${f.id}">${f.name}</option>`).join('');
   sel.value=cur;
-  const evts=tlFiltered();
-  S.tlTab==='list'?renderTLList(evts):renderTLAxis(evts);
+  const visible=tlRangeFilter(tlFiltered());
+  document.getElementById('tl-range-summary').textContent=`Affichage : ${document.getElementById('tl-range-select').selectedOptions[0].textContent}`;
+  S.tlTab==='list'?renderTLList(visible):renderTLAxis(visible);
 }
 
 function renderTLList(evts){
-  document.getElementById('tl-list').innerHTML=evts.length?evts.map(e=>{
-    const b=e.border_color||'#6b7280',t=e.text_color||'#d1d5db';
-    const M=monthObj(e.month);
-    const ds=e.month===13?`AN-${e.an} · JS-0${e.day}`:`AN-${e.an} · ${M.name||''} ${e.day}`;
-    return`<div class="tl-list-item" style="border-left-color:${b}">
-      <div class="tl-list-date">${ds}</div>
-      <div style="flex:1">
+  if(!evts.length){document.getElementById('tl-list').innerHTML='<div class="no-evt" style="padding:30px;text-align:center">Aucun événement dans cette plage temporelle.</div>';return}
+  const groups=[];
+  const blocks={};
+  evts.forEach(e=>{
+    const label=tlGroupLabel(e);
+    if(!blocks[label]){blocks[label]=[];groups.push(label)}
+    blocks[label].push(e);
+  });
+  document.getElementById('tl-list').innerHTML=groups.map(group=>{
+    const items=blocks[group].map(e=>{
+      const b=e.border_color||'#6b7280',t=e.text_color||'#d1d5db';
+      const M=monthObj(e.month);
+      const ds=e.month===13?`${displayYearShort(e.an)} · JS-0${e.day}`:`${displayYearShort(e.an)} · ${M.name||''} ${e.day}`;
+      return `<div class="tl-list-item" style="border-left-color:${b}">
+        <div class="tl-list-date">${ds}</div>
         <div class="tl-list-name">${e.name}</div>
         <div class="tl-list-faction" style="color:${t}">${e.faction_name||'—'}</div>
         ${e.description?`<div class="tl-list-desc">${e.description}</div>`:''}
-      </div></div>`;
-  }).join(''):`<div class="no-evt" style="padding:30px;text-align:center">Aucun événement historique.</div>`;
+      </div>`;
+    }).join('');
+    return `<div><div class="tl-group-title">${group}</div>${items}</div>`;
+  }).join('');
 }
 
 function renderTLAxis(evts){
   const inner=document.getElementById('tl-h-inner');
   if(!evts.length){inner.innerHTML='<div class="tl-axis"></div><div style="text-align:center;padding:50px;color:var(--muted)">Aucun événement.</div>';return}
-  const years=evts.map(e=>e.an??0);
+  const years=evts.map(e=>e.an!==null?gregorianYear(e.an):2413);
   const minY=Math.min(...years),maxY=Math.max(...years);
   const span=Math.max(maxY-minY,10);
   const W=Math.max(900,span*14);
   inner.style.width=W+'px';
-  const xOf=an=>((an??0)-minY)/span*(W-100)+50;
+  const xOf=y=>((y-minY)/span*(W-100))+50;
   const tip=document.getElementById('tl-tooltip');
 
   const step=span<=30?5:span<=100?10:span<=300?25:span<=600?50:100;
   let marks='';
   for(let y=Math.ceil(minY/step)*step;y<=maxY;y+=step){
     const x=xOf(y);
-    marks+=`<div class="tl-year-mark" style="left:${x}px">AN ${y}</div><div class="tl-year-tick" style="left:${x}px"></div>`;
+    const label = y>=2413?`AN ${y-2413}`:`${y}`;
+    marks+=`<div class="tl-year-mark" style="left:${x}px">${label}</div><div class="tl-year-tick" style="left:${x}px"></div>`;
   }
   let dots='',labels='';
   evts.forEach((e,i)=>{
-    const x=xOf(e.an??0);const c=e.border_color||'#6b7280';
+    const year = e.an!==null?gregorianYear(e.an):2413;
+    const x=xOf(year);const c=e.border_color||'#6b7280';
     const above=i%2===0;
     const sn=e.name.replace(/'/g,"\\'").replace(/"/g,'&quot;');
     const sd=(e.description||'').substring(0,80).replace(/'/g,"\\'").replace(/"/g,'&quot;');
@@ -627,7 +751,8 @@ function renderTLAxis(evts){
 
 function showTip(ev,name,fac,an,desc){
   const t=document.getElementById('tl-tooltip');
-  t.innerHTML=`<div style="font-weight:bold;margin-bottom:4px">${name}</div><div style="color:var(--muted);font-size:11px">AN ${an} · ${fac||'—'}</div>${desc?`<div style="margin-top:5px;font-size:11px;color:var(--muted)">${desc}…</div>`:''}`;
+  const label = an===null? 'Annuel' : displayYearShort(an);
+  t.innerHTML=`<div style="font-weight:bold;margin-bottom:4px">${name}</div><div style="color:var(--muted);font-size:11px">${label} · ${fac||'—'}</div>${desc?`<div style="margin-top:5px;font-size:11px;color:var(--muted)">${desc}…</div>`:''}`;
   t.classList.remove('hidden');t.style.left=(ev.clientX+12)+'px';t.style.top=(ev.clientY-10)+'px';
 }
 function hideTip(){document.getElementById('tl-tooltip').classList.add('hidden')}
@@ -655,6 +780,125 @@ function renderFactionTable(){
   html+=`</tbody>`;tbl.innerHTML=html;
 }
 
+async function loadEntities(){S.entities=await api.get('/api/entities')}
+async function loadRelations(){S.relations=await api.get('/api/relations')}
+
+function renderEntitiesView(){
+  renderEntitiesTable();
+  renderRelationsTable();
+}
+
+function renderEntitiesTable(){
+  const container=document.getElementById('entities-list');
+  if(!S.entities.length){container.innerHTML='<div style="padding:20px;color:var(--muted)">Aucune entité définie pour le moment.</div>';return}
+  const rows=S.entities.map(e=>{
+    return `<div class="sb-block" style="margin-bottom:8px;padding:10px;display:flex;justify-content:space-between;gap:12px;align-items:center">
+      <div><div style="font-weight:bold">${e.name}</div><div style="font-size:12px;color:var(--muted)">${e.entity_type} · ${e.faction_name||'Aucune faction'}</div><div style="margin-top:4px;color:var(--muted);font-size:11px">${e.description||'—'}</div></div>
+      <div style="display:flex;gap:6px"><button class="btn-sm" onclick="openEntityModal(${e.id})">✎</button><button class="btn-sm" onclick="confirmDeleteEntity(${e.id},'${e.name.replace(/'/g,"\\'")}')">✕</button></div>
+    </div>`;
+  }).join('');
+  container.innerHTML=rows;
+}
+
+function renderRelationsTable(){
+  const container=document.getElementById('relations-list');
+  if(!S.relations.length){container.innerHTML='<div style="padding:20px;color:var(--muted)">Aucune relation définie.</div>';return}
+  const rows=S.relations.map(r=>{
+    const lab = r.relation_alignment==='friend'?'Ami':r.relation_alignment==='enemy'?'Ennemi':'Neutre';
+    const typ = r.relation_type.replace(/_/g,' ');
+    return `<div class="sb-block" style="margin-bottom:8px;padding:10px;display:flex;justify-content:space-between;gap:12px;align-items:center">
+      <div><div style="font-weight:bold">${r.source_name} → ${r.target_name}</div><div style="font-size:12px;color:var(--muted)">${lab} · ${typ}</div><div style="margin-top:4px;color:var(--muted);font-size:11px">${r.description||'—'}</div></div>
+      <div style="display:flex;gap:6px"><button class="btn-sm" onclick="openRelationModal(${r.id})">✎</button><button class="btn-sm" onclick="confirmDeleteRelation(${r.id})">✕</button></div>
+    </div>`;
+  }).join('');
+  container.innerHTML=rows;
+}
+
+function openEntityModal(id=null){
+  const fs=document.getElementById('entity-faction');
+  fs.innerHTML='<option value="">— Aucune —</option>'+S.factions.map(f=>`<option value="${f.id}">${f.name}</option>`).join('');
+  if(id!==null){
+    const e=S.entities.find(x=>x.id===id);if(!e)return;
+    document.getElementById('entity-title').textContent='Modifier l\'entité';
+    document.getElementById('entity-id').value=e.id;
+    document.getElementById('entity-name').value=e.name;
+    document.getElementById('entity-type').value=e.entity_type;
+    document.getElementById('entity-description').value=e.description||'';
+    document.getElementById('entity-faction').value=e.faction_id||'';
+  } else {
+    document.getElementById('entity-title').textContent='Nouvelle entité';
+    document.getElementById('entity-id').value='';
+    document.getElementById('entity-form').reset();
+  }
+  document.getElementById('entity-backdrop').classList.remove('hidden');
+}
+
+function openRelationModal(id=null){
+  const source=document.getElementById('relation-source');
+  const target=document.getElementById('relation-target');
+  const options=S.entities.map(e=>`<option value="${e.id}">${e.name} (${e.entity_type})</option>`).join('');
+  source.innerHTML=options;target.innerHTML=options;
+  if(id!==null){
+    const r=S.relations.find(x=>x.id===id);if(!r)return;
+    document.getElementById('relation-title').textContent='Modifier la relation';
+    document.getElementById('relation-id').value=r.id;
+    document.getElementById('relation-source').value=r.source_id;
+    document.getElementById('relation-target').value=r.target_id;
+    document.getElementById('relation-alignment').value=r.relation_alignment;
+    document.getElementById('relation-type').value=r.relation_type;
+    document.getElementById('relation-description').value=r.description||'';
+  } else {
+    document.getElementById('relation-title').textContent='Nouvelle relation';
+    document.getElementById('relation-id').value='';
+    document.getElementById('relation-form').reset();
+  }
+  document.getElementById('relation-backdrop').classList.remove('hidden');
+}
+
+document.getElementById('entity-form').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const id=document.getElementById('entity-id').value;
+  const payload={
+    name:document.getElementById('entity-name').value.trim(),
+    entity_type:document.getElementById('entity-type').value,
+    description:document.getElementById('entity-description').value.trim()||null,
+    faction_id:parseInt(document.getElementById('entity-faction').value)||null,
+  };
+  if(!payload.name) return;
+  try{
+    if(id){await api.put(`/api/entities/${id}`,payload);toast('Entité mise à jour','ok')}else{await api.post('/api/entities',payload);toast('Entité créée','ok')}
+    closeModal('entity-backdrop');await Promise.all([loadEntities(),loadRelations()]);renderEntitiesView();
+  }catch(err){toast('Erreur entité','err');console.error(err)}
+});
+
+document.getElementById('relation-form').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const id=document.getElementById('relation-id').value;
+  const payload={
+    source_id:parseInt(document.getElementById('relation-source').value),
+    target_id:parseInt(document.getElementById('relation-target').value),
+    relation_alignment:document.getElementById('relation-alignment').value,
+    relation_type:document.getElementById('relation-type').value,
+    description:document.getElementById('relation-description').value.trim()||null,
+  };
+  if(!payload.source_id||!payload.target_id||payload.source_id===payload.target_id){toast('Sélectionnez deux entités différentes','err');return}
+  try{
+    if(id){await api.put(`/api/relations/${id}`,payload);toast('Relation mise à jour','ok')}else{await api.post('/api/relations',payload);toast('Relation créée','ok')}
+    closeModal('relation-backdrop');await loadRelations();renderRelationsTable();
+  }catch(err){toast('Erreur relation','err');console.error(err)}
+});
+
+function confirmDeleteEntity(id,name){if(!confirm(`Supprimer l'entité « ${name} » ?`))return;deleteEntity(id)}
+async function deleteEntity(id){try{await api.del(`/api/entities/${id}`);toast('Entité supprimée','ok');await Promise.all([loadEntities(),loadRelations()]);renderEntitiesView()}catch(err){toast('Erreur entité','err')}}
+
+function confirmDeleteRelation(id){if(!confirm('Supprimer cette relation ?'))return;deleteRelation(id)}
+async function deleteRelation(id){try{await api.del(`/api/relations/${id}`);toast('Relation supprimée','ok');await loadRelations();renderRelationsTable()}catch(err){toast('Erreur relation','err')}}
+
+function exportEntitiesCSV(){window.location.href='/api/entities/export'}
+function exportEntitiesTimeline(){window.location.href='/api/entities/export-timeline'}
+function exportRelationsCSV(){window.location.href='/api/relations/export'}
+function exportRelationsTimeline(){window.location.href='/api/relations/export-timeline'}
+
 async function jumpToEvent(id){
   const e=S.allEvents.find(x=>x.id===id);if(!e)return;
   S.an=e.an??S.an;S.month=e.month;S.day=e.day;
@@ -664,7 +908,7 @@ async function jumpToEvent(id){
 /* PDF EXPORT */
 function exportPDF(){
   const w=window.open('','_blank');
-  const M=monthObj(S.month);const biss=isBissextile(S.an);const greg=2413+S.an;
+  const M=monthObj(S.month);const biss=isBissextile(S.an);const yearLabel=displayYear(S.an);
   const mRows=S.events.length?S.events.map(e=>{
     const mo=monthObj(e.month);const dl=e.month===13?`JS-0${e.day}`:`${mo.abbr||''} ${e.day}`;
     const rl=e.recurrence&&e.recurrence!=='none'?` [${RECUR_LABELS[e.recurrence]}]`:e.is_annual?' [◎ ANNUEL]':'';
@@ -700,9 +944,9 @@ function exportPDF(){
   @media print{body{padding:10px}}</style></head><body>
   <h1>◈ Calendrier de la Rectitude ◈</h1>
   <div class="sub">CONSEIL DES GOUVERNANCES UNIES · SYSTÈME TEMPOREL OFFICIEL</div>
-  <div class="sub">Export — AN ${S.an} (${greg} grégorien)${biss?' · ANNÉE BISSEXTILE':''}</div>
+  <div class="sub">Export — ${yearLabel}${biss?' · ANNÉE BISSEXTILE':''}</div>
   <div class="legend-box"><strong style="font-size:10px;letter-spacing:.1em">FACTIONS : </strong>${facLegend}</div>
-  <h2>Mois courant — ${M.name||'Jours du Silence'} · AN-${String(S.an).padStart(4,'0')}</h2>
+  <h2>Mois courant — ${M.name||'Jours du Silence'} · ${displayYear(S.an)}</h2>
   <table><thead><tr><th>DATE</th><th>ÉVÉNEMENT</th><th>FACTION</th><th>DESCRIPTION</th></tr></thead><tbody>${mRows}</tbody></table>
   <h2>Événements annuels récurrents</h2>
   <table><thead><tr><th>DATE</th><th>ÉVÉNEMENT</th><th>FACTION</th><th>DESCRIPTION</th></tr></thead><tbody>${annRows}</tbody></table>
@@ -738,6 +982,152 @@ async function handleCSVFile(event){
     render();
   } catch(err) {
     toast('Erreur import CSV', 'err');
+    console.error(err);
+  }
+}
+
+function importTimelineCSV(){
+  const input = document.getElementById('timeline-csv-input');
+  input.value = '';
+  input.click();
+}
+
+async function handleTimelineCSVFile(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  const form = new FormData();
+  form.append('file', file);
+  try {
+    const response = await fetch('/api/events/import-timeline', { method: 'POST', body: form });
+    const data = await response.json();
+    if(!response.ok){
+      throw new Error(data.error || 'Import impossible');
+    }
+    toast(`${data.imported} événements importés`, 'ok');
+    if(data.errors && data.errors.length){
+      alert('Import terminé avec erreurs:\n' + data.errors.join('\n'));
+    }
+    await loadEvents();
+    await loadAllEvents();
+    render();
+  } catch(err) {
+    toast('Erreur import Timeline CSV', 'err');
+    console.error(err);
+  }
+}
+
+function importEntitiesCSV(){
+  const input = document.getElementById('entities-csv-input');
+  input.value = '';
+  input.click();
+}
+
+async function handleEntitiesCSVFile(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  const form = new FormData();
+  form.append('file', file);
+  try {
+    const response = await fetch('/api/entities/import', { method: 'POST', body: form });
+    const data = await response.json();
+    if(!response.ok){
+      throw new Error(data.error || 'Import impossible');
+    }
+    toast(`${data.imported} entités importées`, 'ok');
+    if(data.errors && data.errors.length){
+      alert('Import terminé avec erreurs:\n' + data.errors.join('\n'));
+    }
+    await Promise.all([loadEntities(), loadRelations()]);
+    renderEntitiesView();
+  } catch(err) {
+    toast('Erreur import entités CSV', 'err');
+    console.error(err);
+  }
+}
+
+function importEntitiesTimeline(){
+  const input = document.getElementById('entities-timeline-csv-input');
+  input.value = '';
+  input.click();
+}
+
+async function handleEntitiesTimelineCSVFile(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  const form = new FormData();
+  form.append('file', file);
+  try {
+    const response = await fetch('/api/entities/import-timeline', { method: 'POST', body: form });
+    const data = await response.json();
+    if(!response.ok){
+      throw new Error(data.error || 'Import impossible');
+    }
+    toast(`${data.imported} entités importées`, 'ok');
+    if(data.errors && data.errors.length){
+      alert('Import terminé avec erreurs:\n' + data.errors.join('\n'));
+    }
+    await Promise.all([loadEntities(), loadRelations()]);
+    renderEntitiesView();
+  } catch(err) {
+    toast('Erreur import entités Timeline', 'err');
+    console.error(err);
+  }
+}
+
+function importRelationsCSV(){
+  const input = document.getElementById('relations-csv-input');
+  input.value = '';
+  input.click();
+}
+
+async function handleRelationsCSVFile(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  const form = new FormData();
+  form.append('file', file);
+  try {
+    const response = await fetch('/api/relations/import', { method: 'POST', body: form });
+    const data = await response.json();
+    if(!response.ok){
+      throw new Error(data.error || 'Import impossible');
+    }
+    toast(`${data.imported} relations importées`, 'ok');
+    if(data.errors && data.errors.length){
+      alert('Import terminé avec erreurs:\n' + data.errors.join('\n'));
+    }
+    await loadRelations();
+    renderRelationsTable();
+  } catch(err) {
+    toast('Erreur import relations CSV', 'err');
+    console.error(err);
+  }
+}
+
+function importRelationsTimeline(){
+  const input = document.getElementById('relations-timeline-csv-input');
+  input.value = '';
+  input.click();
+}
+
+async function handleRelationsTimelineCSVFile(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  const form = new FormData();
+  form.append('file', file);
+  try {
+    const response = await fetch('/api/relations/import-timeline', { method: 'POST', body: form });
+    const data = await response.json();
+    if(!response.ok){
+      throw new Error(data.error || 'Import impossible');
+    }
+    toast(`${data.imported} relations importées`, 'ok');
+    if(data.errors && data.errors.length){
+      alert('Import terminé avec erreurs:\n' + data.errors.join('\n'));
+    }
+    await loadRelations();
+    renderRelationsTable();
+  } catch(err) {
+    toast('Erreur import relations Timeline', 'err');
     console.error(err);
   }
 }
@@ -896,7 +1286,17 @@ function closeModal(id){document.getElementById(id).classList.add('hidden')}
 function backdropClose(e,id){if(e.target.id===id)closeModal(id)}
 function toast(msg,type='ok'){const el=document.createElement('div');el.className=`toast ${type}`;el.textContent=(type==='ok'?'✓ ':'✕ ')+msg;document.getElementById('toasts').appendChild(el);setTimeout(()=>el.remove(),3200)}
 
-async function init(){await loadConfig();await loadEvents();await loadAllEvents();await loadVersion();render();setTLTab('list')}
+async function init(){
+  await loadConfig();
+  await loadEvents();
+  await loadAllEvents();
+  await loadVersion();
+  document.body.classList.toggle('light', S.isLight);
+  document.getElementById('theme-btn').textContent = S.isLight ? '🌙 Sombre' : '☀ Clair';
+  document.getElementById('tl-range-select').value = S.tlRange;
+  render();
+  setTLTab('list');
+}
 init();
 </script>
 </body>
