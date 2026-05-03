@@ -294,7 +294,17 @@ input,select,textarea{font-family:inherit;font-size:inherit}
           <option value="year">Année</option>
           <option value="month">Mois</option>
           <option value="day">Jour</option>
+          <option value="custom">Personnalisé</option>
         </select>
+        <div id="tl-custom-range" style="display:none;gap:6px">
+          <input type="number" id="tl-start-an" placeholder="Début AN" onchange="updateTLCustom()">
+          <select id="tl-start-month" onchange="updateTLCustom()"></select>
+          <input type="number" id="tl-start-day" placeholder="Jour" min="1" max="30" onchange="updateTLCustom()">
+          <span>→</span>
+          <input type="number" id="tl-end-an" placeholder="Fin AN" onchange="updateTLCustom()">
+          <select id="tl-end-month" onchange="updateTLCustom()"></select>
+          <input type="number" id="tl-end-day" placeholder="Jour" min="1" max="30" onchange="updateTLCustom()">
+        </div>
         <div style="display:flex;gap:6px;margin-left:auto">
           <button class="btn-sm" id="tl-tab-list" onclick="setTLTab('list')">☰ Liste</button>
           <button class="btn-sm" id="tl-tab-axis" onclick="setTLTab('axis')">⟷ Axe</button>
@@ -330,6 +340,13 @@ input,select,textarea{font-family:inherit;font-size:inherit}
         <button class="btn-sm" onclick="exportRelationsTimeline()">⬇ Relations Timeline</button>
       </div>
       <div id="relations-list"></div>
+    </div>
+    <div class="sb-block">
+      <div class="sb-title">Périodes</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">
+        <button class="add-btn" onclick="openPeriodModal()">+ Nouvelle période</button>
+      </div>
+      <div id="periods-list"></div>
     </div>
   </div>
 </div>
@@ -453,6 +470,30 @@ input,select,textarea{font-family:inherit;font-size:inherit}
   </div>
 </div>
 
+<!-- PERIOD MODAL -->
+<div class="backdrop hidden" id="period-backdrop" onclick="backdropClose(event,'period-backdrop')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closeModal('period-backdrop')">✕</button>
+    <h2 id="period-title">Nouvelle période</h2>
+    <form id="period-form">
+      <input type="hidden" id="period-id">
+      <div class="form-group"><label>NOM *</label><input type="text" id="period-name" required placeholder="Ex : Ère de la Fondation"></div>
+      <div class="form-group"><label>DESCRIPTION</label><textarea id="period-description" placeholder="Contexte historique…"></textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label>DÉBUT - AN</label><input type="number" id="period-start-an" placeholder="421"></div>
+        <div class="form-group"><label>DÉBUT - MOIS</label><select id="period-start-month"></select></div>
+        <div class="form-group"><label>DÉBUT - JOUR</label><input type="number" id="period-start-day" min="1" max="30" placeholder="1"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>FIN - AN</label><input type="number" id="period-end-an" placeholder="500"></div>
+        <div class="form-group"><label>FIN - MOIS</label><select id="period-end-month"></select></div>
+        <div class="form-group"><label>FIN - JOUR</label><input type="number" id="period-end-day" min="1" max="30" placeholder="30"></div>
+      </div>
+      <div class="modal-actions"><button type="button" class="btn-cancel" onclick="closeModal('period-backdrop')">Annuler</button><button type="submit" class="btn-primary">Enregistrer</button></div>
+    </form>
+  </div>
+</div>
+
 <script>
 const SEASON_THEMES={
   'Glacies Disciplinae':{bg:'#060d1f',accent:'#3b82f6',txt:'#93c5fd',hover:'rgba(30,58,95,0.55)',sel:'#1d4ed8',cborder:'rgba(59,130,246,0.22)',label:'❄  Glacies Disciplinae — Hiver · Discipline froide',navColor:'#3b82f6'},
@@ -462,9 +503,10 @@ const SEASON_THEMES={
   null:{bg:'#050505',accent:'#6b7280',txt:'#9ca3af',hover:'rgba(50,50,50,0.4)',sel:'#374151',cborder:'rgba(107,114,128,0.2)',label:'◈  Hors-Saison — Hors-Temps',navColor:'#6b7280'}
 };
 const SEASONS_LIST=['Glacies Disciplinae','Aetheria','Chronos Lux','Ferrum Tenebris'];
+const GREGORIAN_MONTHS=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
 const RECUR_LABELS={none:'',annual:'◎ ANNUEL',monthly:'◎ MENSUEL',decadal:'◎ DÉCADAL',every_n_years:'◎ N ANS'};
 
-const S={an:455,month:1,day:null,months:[],factions:[],events:[],silenceDays:[],allEvents:[],entities:[],relations:[],isLight:true,tlTab:'list',tlRange:'era',currentView:'cal'};
+const S={an:455,month:1,day:null,months:[],factions:[],events:[],silenceDays:[],allEvents:[],entities:[],relations:[],periods:[],isLight:true,tlTab:'list',tlRange:'era',tlCustomStart:null,tlCustomEnd:null,currentView:'cal'};
 
 const api={
   async get(u){const r=await fetch(u);if(!r.ok)throw new Error(r.statusText);return r.json()},
@@ -479,17 +521,30 @@ function isRectitudeYear(an){return gregorianYear(an) >= 2413}
 function displayYear(an){if(an===null||an===undefined)return 'Annuel';const g=gregorianYear(an);return g>=2413?`AN ${an} · ${g} grégorien`:`${g} grégorien`}
 function displayYearShort(an){if(an===null||an===undefined)return 'Annuel';const g=gregorianYear(an);return g>=2413?`AN ${an}`:`${g} gr.`}
 function displayCalendarLabel(an){return isRectitudeYear(an)?'Calendrier de la Rectitude':'Calendrier grégorien'}
-function formatDate(an,month,day){const g=gregorianYear(an);if(g<2413){if(month===13)return `JS-0${day} · ${g} gr.`;return `${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}-${g}`}const p=an<0?'-':'';return`AN-${p}${String(Math.abs(an)).padStart(4,'0')}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`}
-function monthObj(num){return S.months.find(m=>m.num===num)||{}}
-function monthTheme(num){if(S.isLight)return{...SEASON_THEMES[monthObj(num).season||null],bg:'#f1f5f9'};return SEASON_THEMES[monthObj(num).season]||SEASON_THEMES[null]}
+function formatDate(an,month,day){const g=gregorianYear(an);if(g<2413){if(month===13)return `JS-0${day} · ${g} gr.`;return `${String(day).padStart(2,'0')}/${String(month).padStart(2,'0')}/${g}`}const p=an<0?'-':'';return`AN-${p}${String(Math.abs(an)).padStart(4,'0')}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`}
+function monthObj(num){if(!isRectitudeYear(S.an) && num>=1 && num<=12){return {num,name:GREGORIAN_MONTHS[num-1],abbr:GREGORIAN_MONTHS[num-1].slice(0,3)}}return S.months.find(m=>m.num===num)||{}}
+function monthTheme(num){if(S.isLight)return{...SEASON_THEMES[monthObj(num).season||null],bg:'#f1f5f9'};return !isRectitudeYear(S.an)?SEASON_THEMES[null]:SEASON_THEMES[monthObj(num).season]||SEASON_THEMES[null]}
 function eventsForDay(day){return S.events.filter(e=>e.day===day)}
-function setTLRange(r){S.tlRange=r;document.getElementById('tl-range-select').value=r;renderTimeline()}
+function setTLRange(r){S.tlRange=r;document.getElementById('tl-range-select').value=r;const custom=document.getElementById('tl-custom-range');if(r==='custom'){custom.style.display='flex';populateTLCustomMonths();}else{custom.style.display='none';}renderTimeline()}
+function populateTLCustomMonths(){const options=S.months.map(m=>`<option value="${m.num}">${String(m.num).padStart(2,'0')} — ${m.name}</option>`).join('');document.getElementById('tl-start-month').innerHTML=options;document.getElementById('tl-end-month').innerHTML=options;}
+function updateTLCustom(){S.tlCustomStart={an:parseInt(document.getElementById('tl-start-an').value)||null,month:parseInt(document.getElementById('tl-start-month').value),day:parseInt(document.getElementById('tl-start-day').value)||1};S.tlCustomEnd={an:parseInt(document.getElementById('tl-end-an').value)||null,month:parseInt(document.getElementById('tl-end-month').value),day:parseInt(document.getElementById('tl-end-day').value)||30};renderTimeline()}
 function tlRangeFilter(evts){
   if(S.tlRange==='era')return evts
   if(S.tlRange==='year')return evts.filter(e=>e.an===S.an)
   if(S.tlRange==='month')return evts.filter(e=>e.month===S.month)
   if(S.tlRange==='day'){const day=S.day||1;return evts.filter(e=>e.month===S.month&&e.day===day)}
+  if(S.tlRange==='custom'&&S.tlCustomStart&&S.tlCustomEnd){
+    return evts.filter(e=>{
+      const eDate={an:e.an,month:e.month,day:e.day};
+      return dateCompare(eDate,S.tlCustomStart)>=0 && dateCompare(eDate,S.tlCustomEnd)<=0;
+    });
+  }
   return evts
+}
+function dateCompare(a,b){
+  if(a.an!==b.an)return (a.an||0)-(b.an||0);
+  if(a.month!==b.month)return a.month-b.month;
+  return a.day-b.day;
 }
 function tlGroupLabel(e){
   if(S.tlRange==='month')return `Jour ${e.day}`
@@ -524,7 +579,7 @@ function setView(v){
   });
   if(v==='timeline'){loadAllEvents().then(()=>renderTimeline())}
   if(v==='factions'){loadAllEvents().then(()=>renderFactionTable())}
-  if(v==='entities'){Promise.all([loadEntities(),loadRelations(),loadAllEvents()]).then(()=>renderEntitiesView())}
+  if(v==='entities'){Promise.all([loadEntities(),loadRelations(),loadPeriods(),loadAllEvents()]).then(()=>renderEntitiesView())}
 }
 function setTLTab(t){
   S.tlTab=t;
@@ -782,10 +837,12 @@ function renderFactionTable(){
 
 async function loadEntities(){S.entities=await api.get('/api/entities')}
 async function loadRelations(){S.relations=await api.get('/api/relations')}
+async function loadPeriods(){S.periods=await api.get('/api/periods')}
 
 function renderEntitiesView(){
   renderEntitiesTable();
   renderRelationsTable();
+  renderPeriodsTable();
 }
 
 function renderEntitiesTable(){
@@ -809,6 +866,20 @@ function renderRelationsTable(){
     return `<div class="sb-block" style="margin-bottom:8px;padding:10px;display:flex;justify-content:space-between;gap:12px;align-items:center">
       <div><div style="font-weight:bold">${r.source_name} → ${r.target_name}</div><div style="font-size:12px;color:var(--muted)">${lab} · ${typ}</div><div style="margin-top:4px;color:var(--muted);font-size:11px">${r.description||'—'}</div></div>
       <div style="display:flex;gap:6px"><button class="btn-sm" onclick="openRelationModal(${r.id})">✎</button><button class="btn-sm" onclick="confirmDeleteRelation(${r.id})">✕</button></div>
+    </div>`;
+  }).join('');
+  container.innerHTML=rows;
+}
+
+function renderPeriodsTable(){
+  const container=document.getElementById('periods-list');
+  if(!S.periods.length){container.innerHTML='<div style="padding:20px;color:var(--muted)">Aucune période définie.</div>';return}
+  const rows=S.periods.map(p=>{
+    const start = formatDate(p.start_an, p.start_month, p.start_day);
+    const end = formatDate(p.end_an, p.end_month, p.end_day);
+    return `<div class="sb-block" style="margin-bottom:8px;padding:10px;display:flex;justify-content:space-between;gap:12px;align-items:center">
+      <div><div style="font-weight:bold">${p.name}</div><div style="font-size:12px;color:var(--muted)">${start} → ${end}</div><div style="margin-top:4px;color:var(--muted);font-size:11px">${p.description||'—'}</div></div>
+      <div style="display:flex;gap:6px"><button class="btn-sm" onclick="openPeriodModal(${p.id})">✎</button><button class="btn-sm" onclick="confirmDeletePeriod(${p.id},'${p.name.replace(/'/g,"\\'")}')">✕</button></div>
     </div>`;
   }).join('');
   container.innerHTML=rows;
@@ -855,6 +926,31 @@ function openRelationModal(id=null){
   document.getElementById('relation-backdrop').classList.remove('hidden');
 }
 
+function openPeriodModal(id=null){
+  const startMonth=document.getElementById('period-start-month');
+  const endMonth=document.getElementById('period-end-month');
+  const options=S.months.map(m=>`<option value="${m.num}">${String(m.num).padStart(2,'0')} — ${m.name}</option>`).join('');
+  startMonth.innerHTML=options;endMonth.innerHTML=options;
+  if(id!==null){
+    const p=S.periods.find(x=>x.id===id);if(!p)return;
+    document.getElementById('period-title').textContent='Modifier la période';
+    document.getElementById('period-id').value=p.id;
+    document.getElementById('period-name').value=p.name;
+    document.getElementById('period-description').value=p.description||'';
+    document.getElementById('period-start-an').value=p.start_an||'';
+    document.getElementById('period-start-month').value=p.start_month;
+    document.getElementById('period-start-day').value=p.start_day;
+    document.getElementById('period-end-an').value=p.end_an||'';
+    document.getElementById('period-end-month').value=p.end_month;
+    document.getElementById('period-end-day').value=p.end_day;
+  } else {
+    document.getElementById('period-title').textContent='Nouvelle période';
+    document.getElementById('period-id').value='';
+    document.getElementById('period-form').reset();
+  }
+  document.getElementById('period-backdrop').classList.remove('hidden');
+}
+
 document.getElementById('entity-form').addEventListener('submit',async e=>{
   e.preventDefault();
   const id=document.getElementById('entity-id').value;
@@ -888,11 +984,34 @@ document.getElementById('relation-form').addEventListener('submit',async e=>{
   }catch(err){toast('Erreur relation','err');console.error(err)}
 });
 
+document.getElementById('period-form').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const id=document.getElementById('period-id').value;
+  const payload={
+    name:document.getElementById('period-name').value.trim(),
+    description:document.getElementById('period-description').value.trim()||null,
+    start_an:parseInt(document.getElementById('period-start-an').value)||null,
+    start_month:parseInt(document.getElementById('period-start-month').value),
+    start_day:parseInt(document.getElementById('period-start-day').value),
+    end_an:parseInt(document.getElementById('period-end-an').value)||null,
+    end_month:parseInt(document.getElementById('period-end-month').value),
+    end_day:parseInt(document.getElementById('period-end-day').value),
+  };
+  if(!payload.name)return;
+  try{
+    if(id){await api.put(`/api/periods/${id}`,payload);toast('Période mise à jour','ok')}else{await api.post('/api/periods',payload);toast('Période créée','ok')}
+    closeModal('period-backdrop');await loadPeriods();renderPeriodsTable();
+  }catch(err){toast('Erreur période','err');console.error(err)}
+});
+
 function confirmDeleteEntity(id,name){if(!confirm(`Supprimer l'entité « ${name} » ?`))return;deleteEntity(id)}
 async function deleteEntity(id){try{await api.del(`/api/entities/${id}`);toast('Entité supprimée','ok');await Promise.all([loadEntities(),loadRelations()]);renderEntitiesView()}catch(err){toast('Erreur entité','err')}}
 
 function confirmDeleteRelation(id){if(!confirm('Supprimer cette relation ?'))return;deleteRelation(id)}
 async function deleteRelation(id){try{await api.del(`/api/relations/${id}`);toast('Relation supprimée','ok');await loadRelations();renderRelationsTable()}catch(err){toast('Erreur relation','err')}}
+
+function confirmDeletePeriod(id,name){if(!confirm(`Supprimer la période « ${name} » ?`))return;deletePeriod(id)}
+async function deletePeriod(id){try{await api.del(`/api/periods/${id}`);toast('Période supprimée','ok');await loadPeriods();renderPeriodsTable()}catch(err){toast('Erreur période','err')}}
 
 function exportEntitiesCSV(){window.location.href='/api/entities/export'}
 function exportEntitiesTimeline(){window.location.href='/api/entities/export-timeline'}

@@ -2,6 +2,7 @@ from flask import Flask, jsonify, request, render_template, g
 import csv
 import io
 import os
+import socket
 import sqlite3
 
 app = Flask(__name__)
@@ -61,6 +62,56 @@ def resolve_faction(value):
     row = qone("SELECT id FROM factions WHERE lower(name)=?", (v.lower(),))
     return row['id'] if row else None
 
+
+def resolve_entity(value):
+    if value is None:
+        return None
+    v = str(value).strip()
+    if not v:
+        return None
+    if v.isdigit():
+        if qone("SELECT id FROM entities WHERE id=?", (int(v),)):
+            return int(v)
+    row = qone("SELECT id FROM entities WHERE lower(name)=?", (v.lower(),))
+    return row['id'] if row else None
+
+
+def timeline_date_from_event(e):
+    year = 2413 + (e['an'] if e['an'] is not None else 0)
+    if e['month'] == 13:
+        day = e['day']
+        mapped = 25 + day
+        if mapped <= 31:
+            month = 12
+            day_val = mapped
+        else:
+            month = 1
+            day_val = mapped - 31
+            year += 1
+    else:
+        month = e['month']
+        day_val = e['day']
+    return f"{year:04d}-{month:02d}-{day_val:02d}"
+
+
+def parse_timeline_date(value):
+    if not value:
+        return None
+    try:
+        parts = value.strip().split('-')
+        if len(parts) != 3:
+            return None
+        y, m, d = map(int, parts)
+        return y, m, d
+    except ValueError:
+        return None
+
+
+def map_timeline_date_to_internal(year, month, day):
+    if month == 12 and 26 <= day <= 31:
+        return year - 2413, 13, day - 25
+    return year - 2413, month, day
+
 # ── Init ──────────────────────────────────────────────────────────────────────
 
 def init_db():
@@ -97,6 +148,32 @@ def init_db():
                 recurrence   TEXT    NOT NULL DEFAULT 'none',
                 recur_n      INTEGER,
                 faction_id   INTEGER REFERENCES factions(id) ON DELETE SET NULL
+            );
+            CREATE TABLE IF NOT EXISTS entities (
+                id           INTEGER PRIMARY KEY AUTOINCREMENT,
+                name         TEXT NOT NULL UNIQUE,
+                entity_type  TEXT NOT NULL,
+                description  TEXT,
+                faction_id   INTEGER REFERENCES factions(id) ON DELETE SET NULL
+            );
+            CREATE TABLE IF NOT EXISTS entity_relations (
+                id                INTEGER PRIMARY KEY AUTOINCREMENT,
+                source_id         INTEGER NOT NULL REFERENCES entities(id) ON DELETE CASCADE,
+                target_id         INTEGER NOT NULL REFERENCES entities(id) ON DELETE CASCADE,
+                relation_alignment TEXT NOT NULL DEFAULT 'neutral',
+                relation_type     TEXT NOT NULL DEFAULT 'neutral',
+                description       TEXT
+            );
+            CREATE TABLE IF NOT EXISTS periods (
+                id           INTEGER PRIMARY KEY AUTOINCREMENT,
+                name         TEXT NOT NULL,
+                description  TEXT,
+                start_an     INTEGER,
+                start_month  INTEGER NOT NULL,
+                start_day    INTEGER NOT NULL,
+                end_an       INTEGER,
+                end_month    INTEGER NOT NULL,
+                end_day      INTEGER NOT NULL
             );
         """)
 
@@ -280,6 +357,25 @@ def api_events_export():
     return app.response_class(output.getvalue(), mimetype='text/csv',
                                headers={'Content-Disposition': 'attachment; filename=calendrier-rectitude-events.csv'})
 
+@app.route('/api/events/export-timeline')
+def api_events_export_timeline():
+    rows = qall(_EVT_SELECT + " ORDER BY e.an, e.month, e.day")
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(['Title', 'Start Date', 'End Date', 'Description', 'Type', 'Tags', 'Calendar'])
+    for e in rows:
+        writer.writerow([
+            e['name'],
+            timeline_date_from_event(e),
+            timeline_date_from_event(e),
+            e['description'] or '',
+            e['faction_name'] or 'Rectitude Event',
+            ('recurrence:' + (e['recurrence'] or 'none')) if e['recurrence'] else 'none',
+            'Rectitude'
+        ])
+    return app.response_class(output.getvalue(), mimetype='text/csv',
+                               headers={'Content-Disposition': 'attachment; filename=calendrier-rectitude-timeline.csv'})
+
 @app.route('/api/events/import', methods=['POST'])
 def api_events_import():
     file = request.files.get('file')
@@ -314,6 +410,158 @@ def api_events_import():
             "INSERT INTO events (an,month,day,name,description,is_annual,recurrence,recur_n,faction_id) VALUES (?,?,?,?,?,?,?,?,?)",
             (an, month, day, name, row.get('description') or None,
              is_annual, recurrence, recur_n, faction_id)
+        )
+        imported += 1
+    get_db().commit()
+    return jsonify({'imported': imported, 'errors': errors})
+
+@app.route('/api/entities/import', methods=['POST'])
+def api_entities_import():
+    file = request.files.get('file')
+    if not file:
+        return jsonify({'error': 'Aucun fichier CSV reçu'}), 400
+    text = file.stream.read().decode('utf-8-sig')
+    reader = csv.DictReader(io.StringIO(text))
+    imported = 0
+    errors = []
+    for idx, raw in enumerate(reader, start=1):
+        row = {k.strip().lower(): (v or '').strip() for k, v in raw.items() if k}
+        name = row.get('name', '')
+        if not name:
+            errors.append(f'Ligne {idx}: nom manquant')
+            continue
+        entity_type = row.get('entity_type') or row.get('type') or row.get('category') or 'Personnage'
+        faction_id = resolve_faction(row.get('faction') or row.get('faction_id'))
+        run(
+            "INSERT INTO entities (name,entity_type,description,faction_id) VALUES (?,?,?,?)",
+            (name, entity_type, row.get('description') or None, faction_id)
+        )
+        imported += 1
+    return jsonify({'imported': imported, 'errors': errors})
+
+@app.route('/api/entities/import-timeline', methods=['POST'])
+def api_entities_import_timeline():
+    file = request.files.get('file')
+    if not file:
+        return jsonify({'error': 'Aucun fichier CSV reçu'}), 400
+    text = file.stream.read().decode('utf-8-sig')
+    reader = csv.DictReader(io.StringIO(text))
+    imported = 0
+    errors = []
+    for idx, raw in enumerate(reader, start=1):
+        row = {k.strip().lower(): (v or '').strip() for k, v in raw.items() if k}
+        name = row.get('title') or row.get('name')
+        if not name:
+            errors.append(f'Ligne {idx}: titre manquant')
+            continue
+        entity_type = row.get('type') or row.get('entity_type') or 'Personnage'
+        faction_id = resolve_faction(row.get('tags') or row.get('faction') or row.get('series'))
+        run(
+            "INSERT INTO entities (name,entity_type,description,faction_id) VALUES (?,?,?,?)",
+            (name, entity_type, row.get('description') or None, faction_id)
+        )
+        imported += 1
+    return jsonify({'imported': imported, 'errors': errors})
+
+@app.route('/api/relations/import', methods=['POST'])
+def api_relations_import():
+    file = request.files.get('file')
+    if not file:
+        return jsonify({'error': 'Aucun fichier CSV reçu'}), 400
+    text = file.stream.read().decode('utf-8-sig')
+    reader = csv.DictReader(io.StringIO(text))
+    imported = 0
+    errors = []
+    for idx, raw in enumerate(reader, start=1):
+        row = {k.strip().lower(): (v or '').strip() for k, v in raw.items() if k}
+        source = row.get('source') or row.get('source_name')
+        target = row.get('target') or row.get('target_name')
+        if not source or not target:
+            errors.append(f'Ligne {idx}: source ou cible manquante')
+            continue
+        source_id = resolve_entity(source)
+        target_id = resolve_entity(target)
+        if not source_id or not target_id:
+            errors.append(f'Ligne {idx}: source ou cible introuvable ({source} / {target})')
+            continue
+        alignment = (row.get('alignment') or row.get('relation_alignment') or 'neutral').lower()
+        if alignment not in ('friend', 'enemy', 'neutral'):
+            alignment = 'neutral'
+        relation_type = row.get('relation_type') or row.get('type') or 'neutral'
+        run(
+            "INSERT INTO entity_relations (source_id,target_id,relation_alignment,relation_type,description) VALUES (?,?,?,?,?)",
+            (source_id, target_id, alignment, relation_type, row.get('description') or None)
+        )
+        imported += 1
+    return jsonify({'imported': imported, 'errors': errors})
+
+@app.route('/api/relations/import-timeline', methods=['POST'])
+def api_relations_import_timeline():
+    file = request.files.get('file')
+    if not file:
+        return jsonify({'error': 'Aucun fichier CSV reçu'}), 400
+    text = file.stream.read().decode('utf-8-sig')
+    reader = csv.DictReader(io.StringIO(text))
+    imported = 0
+    errors = []
+    for idx, raw in enumerate(reader, start=1):
+        row = {k.strip().lower(): (v or '').strip() for k, v in raw.items() if k}
+        title = row.get('title') or row.get('name')
+        source = row.get('source') or row.get('source_name')
+        target = row.get('target') or row.get('target_name')
+        if not source or not target:
+            if title and '→' in title:
+                parts = title.split('→')
+                if len(parts) == 2:
+                    source = parts[0].strip(); target = parts[1].strip()
+        if not source or not target:
+            errors.append(f'Ligne {idx}: source ou cible introuvable pour la relation')
+            continue
+        source_id = resolve_entity(source)
+        target_id = resolve_entity(target)
+        if not source_id or not target_id:
+            errors.append(f'Ligne {idx}: entité introuvable ({source} / {target})')
+            continue
+        alignment = (row.get('tags') or row.get('alignment') or row.get('relation_alignment') or 'neutral').lower()
+        if alignment not in ('friend', 'enemy', 'neutral'):
+            alignment = 'neutral'
+        relation_type = row.get('type') or row.get('relation_type') or 'neutral'
+        run(
+            "INSERT INTO entity_relations (source_id,target_id,relation_alignment,relation_type,description) VALUES (?,?,?,?,?)",
+            (source_id, target_id, alignment, relation_type, row.get('description') or None)
+        )
+        imported += 1
+    return jsonify({'imported': imported, 'errors': errors})
+
+@app.route('/api/events/import-timeline', methods=['POST'])
+def api_events_import_timeline():
+    file = request.files.get('file')
+    if not file:
+        return jsonify({'error': 'Aucun fichier CSV reçu'}), 400
+    text = file.stream.read().decode('utf-8-sig')
+    reader = csv.DictReader(io.StringIO(text))
+    imported = 0
+    errors = []
+    for idx, raw in enumerate(reader, start=1):
+        row = {k.strip().lower(): (v or '').strip() for k, v in raw.items() if k}
+        title = row.get('title') or row.get('name')
+        start_date = row.get('start date') or row.get('startdate') or row.get('start')
+        if not title or not start_date:
+            errors.append(f'Ligne {idx}: titre ou date de début manquant')
+            continue
+        parsed = parse_timeline_date(start_date)
+        if parsed is None:
+            errors.append(f'Ligne {idx}: date de début invalide ({start_date})')
+            continue
+        an, month, day = map_timeline_date_to_internal(*parsed)
+        if month is None or day < 1 or day > 30:
+            errors.append(f'Ligne {idx}: date impossible ({start_date})')
+            continue
+        faction_id = resolve_faction(row.get('type') or row.get('tags') or row.get('series') or row.get('faction'))
+        get_db().execute(
+            "INSERT INTO events (an,month,day,name,description,is_annual,recurrence,recur_n,faction_id) VALUES (?,?,?,?,?,?,?,?,?)",
+            (an, month, day, title, row.get('description') or None,
+             0, 'none', None, faction_id)
         )
         imported += 1
     get_db().commit()
@@ -359,6 +607,172 @@ def api_delete_event(eid):
     run("DELETE FROM events WHERE id=?", (eid,))
     return jsonify({'ok': True})
 
+# ── Entities / Relations ───────────────────────────────────────────────────────
+
+@app.route('/api/entities')
+def api_entities():
+    return jsonify(qall("SELECT e.*, f.name AS faction_name FROM entities e LEFT JOIN factions f ON e.faction_id = f.id ORDER BY e.entity_type, e.name"))
+
+@app.route('/api/entities', methods=['POST'])
+def api_create_entity():
+    d = request.json
+    eid = run(
+        "INSERT INTO entities (name,entity_type,description,faction_id) VALUES (?,?,?,?)",
+        (d['name'], d['entity_type'], d.get('description'), d.get('faction_id') or None)
+    )
+    return jsonify(qone("SELECT e.*, f.name AS faction_name FROM entities e LEFT JOIN factions f ON e.faction_id = f.id WHERE e.id=?", (eid,))), 201
+
+@app.route('/api/entities/<int:eid>', methods=['PUT'])
+def api_update_entity(eid):
+    d = request.json
+    run("UPDATE entities SET name=?,entity_type=?,description=?,faction_id=? WHERE id=?",
+        (d['name'], d['entity_type'], d.get('description'), d.get('faction_id') or None, eid))
+    return jsonify({'ok': True})
+
+@app.route('/api/entities/<int:eid>', methods=['DELETE'])
+def api_delete_entity(eid):
+    run("DELETE FROM entities WHERE id=?", (eid,))
+    return jsonify({'ok': True})
+
+@app.route('/api/relations')
+def api_relations():
+    rows = qall(
+        "SELECT r.*, s.name AS source_name, t.name AS target_name, s.entity_type AS source_type, t.entity_type AS target_type "
+        "FROM entity_relations r "
+        "JOIN entities s ON r.source_id = s.id "
+        "JOIN entities t ON r.target_id = t.id "
+        "ORDER BY r.id"
+    )
+    return jsonify(rows)
+
+@app.route('/api/relations', methods=['POST'])
+def api_create_relation():
+    d = request.json
+    rid = run(
+        "INSERT INTO entity_relations (source_id,target_id,relation_alignment,relation_type,description) VALUES (?,?,?,?,?)",
+        (d['source_id'], d['target_id'], d.get('relation_alignment','neutral'), d.get('relation_type','neutral'), d.get('description'))
+    )
+    return jsonify(qone("SELECT * FROM entity_relations WHERE id=?", (rid,))), 201
+
+@app.route('/api/relations/<int:rid>', methods=['PUT'])
+def api_update_relation(rid):
+    d = request.json
+    run("UPDATE entity_relations SET source_id=?,target_id=?,relation_alignment=?,relation_type=?,description=? WHERE id=?",
+        (d['source_id'], d['target_id'], d.get('relation_alignment','neutral'), d.get('relation_type','neutral'), d.get('description'), rid))
+    return jsonify({'ok': True})
+
+@app.route('/api/relations/<int:rid>', methods=['DELETE'])
+def api_delete_relation(rid):
+    run("DELETE FROM entity_relations WHERE id=?", (rid,))
+    return jsonify({'ok': True})
+
+@app.route('/api/relations/by-entity/<int:eid>')
+def api_relations_by_entity(eid):
+    rows = qall(
+        "SELECT r.*, s.name AS source_name, t.name AS target_name, s.entity_type AS source_type, t.entity_type AS target_type "
+        "FROM entity_relations r "
+        "JOIN entities s ON r.source_id = s.id "
+        "JOIN entities t ON r.target_id = t.id "
+        "WHERE r.source_id=? OR r.target_id=? ORDER BY r.id",
+        (eid, eid)
+    )
+    return jsonify(rows)
+
+# ── Periods ───────────────────────────────────────────────────────────────────
+
+@app.route('/api/periods')
+def api_periods():
+    return jsonify(qall("SELECT * FROM periods ORDER BY start_an, start_month, start_day"))
+
+@app.route('/api/periods', methods=['POST'])
+def api_create_period():
+    d = request.json
+    pid = run(
+        "INSERT INTO periods (name,description,start_an,start_month,start_day,end_an,end_month,end_day) VALUES (?,?,?,?,?,?,?,?)",
+        (d['name'], d.get('description'), d.get('start_an'), d['start_month'], d['start_day'], d.get('end_an'), d['end_month'], d['end_day'])
+    )
+    return jsonify(qone("SELECT * FROM periods WHERE id=?", (pid,))), 201
+
+@app.route('/api/periods/<int:pid>', methods=['PUT'])
+def api_update_period(pid):
+    d = request.json
+    run("UPDATE periods SET name=?,description=?,start_an=?,start_month=?,start_day=?,end_an=?,end_month=?,end_day=? WHERE id=?",
+        (d['name'], d.get('description'), d.get('start_an'), d['start_month'], d['start_day'], d.get('end_an'), d['end_month'], d['end_day'], pid))
+    return jsonify({'ok': True})
+
+@app.route('/api/periods/<int:pid>', methods=['DELETE'])
+def api_delete_period(pid):
+    run("DELETE FROM periods WHERE id=?", (pid,))
+    return jsonify({'ok': True})
+
+@app.route('/api/entities/export')
+def api_entities_export():
+    rows = qall("SELECT e.*, f.name AS faction_name FROM entities e LEFT JOIN factions f ON e.faction_id = f.id ORDER BY e.entity_type, e.name")
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(['name', 'entity_type', 'description', 'faction'])
+    for e in rows:
+        writer.writerow([e['name'], e['entity_type'], e['description'] or '', e['faction_name'] or ''])
+    return app.response_class(output.getvalue(), mimetype='text/csv',
+                               headers={'Content-Disposition': 'attachment; filename=calendrier-rectitude-entities.csv'})
+
+@app.route('/api/entities/export-timeline')
+def api_entities_export_timeline():
+    rows = qall("SELECT e.*, f.name AS faction_name FROM entities e LEFT JOIN factions f ON e.faction_id = f.id ORDER BY e.entity_type, e.name")
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(['Title', 'Start Date', 'End Date', 'Description', 'Type', 'Tags', 'Calendar'])
+    for e in rows:
+        writer.writerow([
+            e['name'],
+            '2413-01-01',
+            '2413-01-01',
+            e['description'] or '',
+            e['entity_type'],
+            e['faction_name'] or 'entity',
+            'Rectitude'
+        ])
+    return app.response_class(output.getvalue(), mimetype='text/csv',
+                               headers={'Content-Disposition': 'attachment; filename=calendrier-rectitude-entities-timeline.csv'})
+
+@app.route('/api/relations/export')
+def api_relations_export():
+    rows = qall(
+        "SELECT r.*, s.name AS source_name, t.name AS target_name FROM entity_relations r "
+        "JOIN entities s ON r.source_id = s.id "
+        "JOIN entities t ON r.target_id = t.id ORDER BY r.id"
+    )
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(['source', 'target', 'alignment', 'relation_type', 'description'])
+    for r in rows:
+        writer.writerow([r['source_name'], r['target_name'], r['relation_alignment'], r['relation_type'], r['description'] or ''])
+    return app.response_class(output.getvalue(), mimetype='text/csv',
+                               headers={'Content-Disposition': 'attachment; filename=calendrier-rectitude-relations.csv'})
+
+@app.route('/api/relations/export-timeline')
+def api_relations_export_timeline():
+    rows = qall(
+        "SELECT r.*, s.name AS source_name, t.name AS target_name FROM entity_relations r "
+        "JOIN entities s ON r.source_id = s.id "
+        "JOIN entities t ON r.target_id = t.id ORDER BY r.id"
+    )
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(['Title', 'Start Date', 'End Date', 'Description', 'Type', 'Tags', 'Calendar'])
+    for r in rows:
+        writer.writerow([
+            f"{r['source_name']} → {r['target_name']}",
+            '2413-01-01',
+            '2413-01-01',
+            r['description'] or '',
+            r['relation_type'],
+            ','.join([r['relation_alignment'], r['relation_type']]),
+            'Rectitude'
+        ])
+    return app.response_class(output.getvalue(), mimetype='text/csv',
+                               headers={'Content-Disposition': 'attachment; filename=calendrier-rectitude-relations-timeline.csv'})
+
 @app.route('/api/events/<int:eid>/duplicate', methods=['POST'])
 def api_duplicate_event(eid):
     e = qone("SELECT * FROM events WHERE id=?", (eid,))
@@ -381,6 +795,19 @@ def changelog():
 
 # ── Run ───────────────────────────────────────────────────────────────────────
 
+def find_free_port(start=5000, end=5010):
+    for port in range(start, end + 1):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            try:
+                sock.bind(('127.0.0.1', port))
+                return port
+            except OSError:
+                continue
+    raise RuntimeError(f'No available port between {start} and {end}')
+
 if __name__ == '__main__':
     init_db()
-    app.run(debug=True, port=5000)
+    port = find_free_port(5000, 5010)
+    print(f'Launching Flask on port {port}')
+    app.run(debug=True, port=port)

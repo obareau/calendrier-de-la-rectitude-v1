@@ -1,10 +1,17 @@
 # Changelog
 
+## [1.4.2] 2026-05-03
+- Sprint 2 commencé : Ajout des périodes temporelles avec dates de début et fin
+- Sélecteurs de plages temporelles personnalisées dans la timeline (début/fin)
+- Gestion des périodes dans l'interface réseau (entités/relations/périodes)
+- API backend pour les périodes (CRUD complet)
+
 ## [1.4.1] 2026-05-03
 - Sprint 1 finalisé : Timeline dynamique, axe scrollable et sélection de plage temporelle
 - Thème clair par défaut, avec contraste élevé et rendu plus lisible
 - Amélioration du mode liste Timeline et organisation par jour/mois/année/ère
 - Nettoyage du branding Aeon et bascule complète vers Timeline Rectitude
+- Correction de l'affichage : avant le 1er Ordium 413, les dates sont présentées selon le calendrier grégorien, en reconnaissant la coexistence des deux systèmes temporels
 - Mise à jour des imports/exports Timeline pour entités et relations
 
 ## [1.4.0] 2026-05-03

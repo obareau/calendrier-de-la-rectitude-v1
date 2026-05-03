@@ -10,6 +10,8 @@ Application Flask de gestion du calendrier interne de la Rectitude.
 - Création, modification, duplication et suppression d'événements
 - Export PDF
 - Export et import CSV d'événements
+- Transition calendrier : grégorien avant le 1er janvier 2413, Rectitude après le 31 décembre 2412
+- Export et import Timeline CSV compatible, adapté au calendrier de la Rectitude
 - Pages `À propos` et `Changelog`
 - Pas d’authentification pour l’instant
 
