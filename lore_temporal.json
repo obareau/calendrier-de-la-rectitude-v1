@@ -1,0 +1,19 @@
+{
+  "_meta": "Curation temporelle du lore robotariis-writing (Chronos Phase D). Durees de vie des entites + dates de relations Atlas (champ `since`). Encodage: An<n>, An0 = Fondation du C.G.U. Chaque entree porte une `reason` tracant la source dans le lore. Applique a l'Atlas par date_atlas_relations.py.",
+  "entities": {
+    "joy":             {"label": "Joy",             "birth": -1,  "death": 422,  "reason": "joy.md: naissance An-1, corps detruit le 3 Ordium An 422"},
+    "nova-7":          {"label": "Nova 7",          "birth": 37,  "death": null, "reason": "nova-7.md: Premier Eveil An 37 (anomalie systemique), toujours active"},
+    "l1l1th":          {"label": "L1L1TH",          "birth": 0,   "death": null, "reason": "l1l1th.md: creee An 0 par le C.G.U., survit dans Nova 7"},
+    "homo-mechanicus": {"label": "Homo Mechanicus", "birth": 390, "death": null, "reason": "homo-mechanicus.md: Programme HM An 390-400"},
+    "3v3":             {"label": "3V3-101 (Eve)",   "birth": 400, "death": null, "reason": "3v3.md: mise en service An ~400-405"},
+    "zoe":             {"label": "Zoe",             "birth": 400, "death": null, "reason": "zoe.md: fusion Joy+Mik-L, union avec l'Homo Mechanicus des An 402"}
+  },
+  "relations": [
+    {"id": 3766, "source": "nova-7",   "target": "renegats",        "rel_type": "allie",  "since": "An43",  "reason": "nova-7.md: 'Allies depuis l'An 43'"},
+    {"id": 3523, "source": "zoe",      "target": "homo-mechanicus", "rel_type": "ami",    "since": "An402", "reason": "homo-mechanicus.md: union An 402"},
+    {"id": 3524, "source": "zoe",      "target": "joy",             "rel_type": "ami",    "since": "An421", "reason": "zoe.md: sauvegarde de la conscience de Joy (nullification An 421-422)"},
+    {"id": 3492, "source": "l1l1th",   "target": "cgu-rectitude",   "rel_type": "ennemi", "since": "An452", "reason": "l1l1th.md: revelation publique du mensonge fondateur An 452 -> rupture"},
+    {"id": 3509, "source": "orion-99", "target": "renegats",        "rel_type": "membre", "since": "An420", "reason": "orion-99.md: Ere Binaire, commande une cellule des An 421"},
+    {"id": 3552, "source": "joy",      "target": "renegats",        "rel_type": "membre", "since": "An400", "reason": "joy.md/zoe.md: fondatrice spirituelle, resistance active avant capture An 421"}
+  ]
+}
