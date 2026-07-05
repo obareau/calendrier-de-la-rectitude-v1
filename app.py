@@ -1,13 +1,40 @@
 from flask import Flask, jsonify, request, render_template, g
 import csv
 import io
+import json
 import os
 import socket
 import sqlite3
+import time
+import urllib.error
+import urllib.parse
+import urllib.request
 
 app = Flask(__name__)
 DB      = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'calendrier.db')
-VERSION = "1.4.0"
+VERSION = "1.5.0"
+
+# ── Atlas bridge ────────────────────────────────────────────────────────────────
+# Chronos est garant du temps ; l'Atlas est garant de la cohérence (graphe + lore).
+# Connexion en lecture live via l'API HTTP de l'Atlas, avec cache court + fallback
+# gracieux : si l'Atlas est éteint, Chronos continue d'afficher ses propres événements.
+ATLAS_URL = os.environ.get('ATLAS_URL', 'http://localhost:5557').rstrip('/')
+ATLAS_TTL = 45  # secondes
+_atlas_cache = {}
+
+def _atlas_get(path):
+    """GET sur l'API Atlas avec cache mémoire (ATLAS_TTL) et fallback None si hors ligne."""
+    now = time.time()
+    hit = _atlas_cache.get(path)
+    if hit and now - hit[0] < ATLAS_TTL:
+        return hit[1]
+    try:
+        with urllib.request.urlopen(ATLAS_URL + path, timeout=3) as r:
+            data = json.loads(r.read().decode('utf-8'))
+        _atlas_cache[path] = (now, data)
+        return data
+    except (urllib.error.URLError, OSError, ValueError, TimeoutError):
+        return None
 
 # ── DB helpers ────────────────────────────────────────────────────────────────
 
@@ -183,6 +210,11 @@ def init_db():
             db.execute("ALTER TABLE events ADD COLUMN recurrence TEXT NOT NULL DEFAULT 'none'")
         if 'recur_n' not in cols:
             db.execute("ALTER TABLE events ADD COLUMN recur_n INTEGER")
+        # ── Migrate: Atlas link columns (slug d'entité + relation miroir) ──
+        if 'atlas_entity' not in cols:
+            db.execute("ALTER TABLE events ADD COLUMN atlas_entity TEXT")
+        if 'atlas_relation_id' not in cols:
+            db.execute("ALTER TABLE events ADD COLUMN atlas_relation_id INTEGER")
 
         # ── Factions ──
         db.executemany(
@@ -256,6 +288,59 @@ def index():
 @app.route('/api/version')
 def api_version():
     return jsonify({'version': VERSION})
+
+# ── Atlas proxy (lecture) ───────────────────────────────────────────────────────
+
+@app.route('/api/atlas/entities')
+def api_atlas_entities():
+    """Entités du graphe Atlas (personnages, factions, lieux…) pour lier un événement."""
+    g = _atlas_get('/api/graph')
+    if g is None:
+        return jsonify({'online': False, 'entities': []})
+    ents = [
+        {'id': n.get('id'), 'label': n.get('label'),
+         'category': n.get('category'), 'subcat': n.get('subcat')}
+        for n in g.get('nodes', [])
+    ]
+    ents.sort(key=lambda e: (e['category'] or '', (e['label'] or '').lower()))
+    return jsonify({'online': True, 'entities': ents})
+
+@app.route('/api/atlas/timeline')
+def api_atlas_timeline():
+    """Relations datées de l'Atlas (champ `since`). Renvoie l'année entière parsée."""
+    t = _atlas_get('/api/timeline')
+    if t is None:
+        return jsonify({'online': False, 'events': []})
+    out = []
+    for r in t:
+        since = (r.get('since') or 'An0')
+        try:
+            an = int(since.replace('An', ''))
+        except ValueError:
+            an = 0
+        out.append({
+            'id': r.get('id'), 'an': an, 'since': since, 'type': r.get('type'),
+            'source': r.get('source'), 'source_label': r.get('source_label'),
+            'target': r.get('target'), 'target_label': r.get('target_label'),
+        })
+    return jsonify({'online': True, 'events': out})
+
+@app.route('/api/atlas/lore/<slug>')
+def api_atlas_lore(slug):
+    """Extrait de lore d'une entité, servi depuis le vault robotariis-writing via l'Atlas."""
+    v = _atlas_get('/api/vault/' + urllib.parse.quote(slug))
+    if v is None:
+        return jsonify({'online': False})
+    return jsonify({'online': True, **v})
+
+@app.route('/api/atlas/health')
+def api_atlas_health():
+    """Santé/cohérence du graphe Atlas (contradictions, orphelins, totaux)."""
+    s = _atlas_get('/api/stats')
+    if s is None:
+        return jsonify({'online': False})
+    return jsonify({'online': True, 'health': s.get('health', {}),
+                    'totals': s.get('totals', {}), 'factions': s.get('factions', [])})
 
 # MONTHS
 @app.route('/api/months')
@@ -585,9 +670,10 @@ def api_create_event():
     is_annual = 1 if (d.get('is_annual') or r == 'annual') else 0
     an = None if is_annual else d.get('an')
     eid = run(
-        "INSERT INTO events (an,month,day,name,description,is_annual,recurrence,recur_n,faction_id) VALUES (?,?,?,?,?,?,?,?,?)",
+        "INSERT INTO events (an,month,day,name,description,is_annual,recurrence,recur_n,faction_id,atlas_entity,atlas_relation_id) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
         (an, d['month'], d['day'], d['name'], d.get('description'),
-         is_annual, r, d.get('recur_n'), d.get('faction_id') or None)
+         is_annual, r, d.get('recur_n'), d.get('faction_id') or None,
+         d.get('atlas_entity') or None, d.get('atlas_relation_id') or None)
     )
     return jsonify(qone(_EVT_SELECT + " WHERE e.id=?", (eid,))), 201
 
@@ -597,9 +683,10 @@ def api_update_event(eid):
     r = d.get('recurrence','none')
     is_annual = 1 if (d.get('is_annual') or r == 'annual') else 0
     an = None if is_annual else d.get('an')
-    run("UPDATE events SET an=?,month=?,day=?,name=?,description=?,is_annual=?,recurrence=?,recur_n=?,faction_id=? WHERE id=?",
+    run("UPDATE events SET an=?,month=?,day=?,name=?,description=?,is_annual=?,recurrence=?,recur_n=?,faction_id=?,atlas_entity=?,atlas_relation_id=? WHERE id=?",
         (an, d['month'], d['day'], d['name'], d.get('description'),
-         is_annual, r, d.get('recur_n'), d.get('faction_id') or None, eid))
+         is_annual, r, d.get('recur_n'), d.get('faction_id') or None,
+         d.get('atlas_entity') or None, d.get('atlas_relation_id') or None, eid))
     return jsonify(qone(_EVT_SELECT + " WHERE e.id=?", (eid,)))
 
 @app.route('/api/events/<int:eid>', methods=['DELETE'])

@@ -244,6 +244,62 @@ input,select,textarea{font-family:inherit;font-size:inherit}
 .tl-year-tick{position:absolute;top:16px;width:1px;height:10px;background:var(--muted)}
 .tl-tooltip{position:fixed;z-index:300;background:var(--modal-bg);border:1px solid var(--border2);border-radius:6px;padding:8px 12px;font-size:12px;max-width:240px;pointer-events:none;box-shadow:0 4px 14px rgba(0,0,0,0.5)}
 .tl-tooltip.hidden{display:none}
+
+/* CHRONOS */
+.chronos-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.chronos-title{font-size:22px;letter-spacing:.22em;color:var(--txt);margin:2px 0 0}
+.atlas-badge{font-size:11px;padding:6px 12px;border-radius:20px;border:1px solid var(--border2);color:var(--muted);background:var(--bg3);white-space:nowrap;cursor:default}
+.atlas-badge.ok{border-color:#16a34a;color:#86efac;background:rgba(20,83,45,0.18)}
+.atlas-badge.warn{border-color:#f59e0b;color:#fcd34d;background:rgba(61,44,0,0.2)}
+.atlas-badge.off{border-color:#6b7280;color:var(--muted)}
+.tl-zoom{display:flex;align-items:center;gap:6px}
+.tl-zoom-label{font-size:11px;color:var(--muted);min-width:58px;text-align:center}
+.btn-sm.active{background:var(--accent);border-color:var(--accent);color:#fff}
+/* faction picker */
+.tl-faction-picker{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px;padding:8px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:7px}
+.tl-fp-label{font-size:11px;color:var(--muted);letter-spacing:.06em}
+.tl-fp-chips{display:flex;gap:6px;flex-wrap:wrap;flex:1}
+.tl-fp-chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:3px 9px;border-radius:14px;border:1px solid var(--border2);cursor:pointer;user-select:none;transition:opacity .12s,filter .12s;filter:grayscale(.6);opacity:.5}
+.tl-fp-chip.on{filter:none;opacity:1}
+.tl-fp-chip .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.tl-fp-mini{font-size:10px;padding:2px 8px;background:transparent;border:1px solid var(--border2);color:var(--muted);border-radius:12px;cursor:pointer;font-family:inherit}
+.tl-fp-mini:hover{color:var(--txt2);border-color:var(--muted)}
+/* swimlanes */
+.tl-lanes{position:relative;min-width:900px}
+.tl-ruler{position:relative;height:26px;border-bottom:1px solid var(--border2);margin-left:var(--lane-label-w,150px)}
+.tl-ruler-mark{position:absolute;top:2px;transform:translateX(-50%);font-size:10px;color:var(--muted);white-space:nowrap}
+.tl-ruler-tick{position:absolute;bottom:0;width:1px;height:7px;background:var(--border2)}
+.tl-foundation{position:absolute;top:0;bottom:0;width:2px;background:linear-gradient(var(--accent),transparent);z-index:1;pointer-events:none}
+.tl-foundation-label{position:absolute;top:-2px;transform:translateX(-50%);font-size:9px;color:var(--accent);font-weight:700;letter-spacing:.05em;white-space:nowrap}
+.tl-lane{position:relative;display:flex;align-items:stretch;border-bottom:1px dashed var(--border);min-height:44px}
+.tl-lane:hover{background:rgba(127,127,127,0.04)}
+.tl-lane-label{width:var(--lane-label-w,150px);flex-shrink:0;position:sticky;left:0;z-index:3;background:var(--bg2);display:flex;align-items:center;gap:7px;padding:6px 10px;font-size:11px;color:var(--txt2);border-right:2px solid var(--border);font-weight:600}
+.tl-lane-label .dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;box-shadow:0 0 0 2px var(--bg2)}
+.tl-lane-label .cnt{margin-left:auto;font-size:9px;color:var(--muted);font-weight:400}
+.tl-lane-track{position:relative;flex:1;min-height:44px}
+.tl-ev{position:absolute;top:50%;transform:translate(-50%,-50%);z-index:2}
+.tl-ev-dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--bg2);cursor:pointer;transition:transform .12s;box-shadow:0 1px 3px rgba(0,0,0,.4)}
+.tl-ev-dot:hover{transform:scale(1.45)}
+.tl-ev-atlas .tl-ev-dot{border-radius:2px;transform:rotate(45deg);width:10px;height:10px;opacity:.85}
+.tl-ev-label{position:absolute;left:50%;transform:translateX(-50%);top:14px;font-size:9px;white-space:nowrap;max-width:130px;overflow:hidden;text-overflow:ellipsis;color:var(--muted);pointer-events:none}
+.tl-lanes-empty{padding:40px;text-align:center;color:var(--muted)}
+/* synthèse */
+.tl-synth{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.synth-card{background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:14px 16px}
+.synth-card h4{font-size:11px;letter-spacing:.1em;color:var(--muted);margin-bottom:10px;text-transform:uppercase}
+.synth-big{font-size:30px;font-weight:700;color:var(--txt);line-height:1}
+.synth-sub{font-size:11px;color:var(--muted);margin-top:4px}
+.synth-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:11px}
+.synth-bar-name{width:110px;flex-shrink:0;color:var(--txt2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.synth-bar-track{flex:1;height:9px;background:var(--bg);border-radius:5px;overflow:hidden}
+.synth-bar-fill{height:100%;border-radius:5px}
+.synth-bar-val{width:28px;text-align:right;color:var(--muted);flex-shrink:0}
+.synth-era{display:flex;gap:10px}
+.synth-era div{flex:1;text-align:center}
+.synth-era .n{font-size:22px;font-weight:700;color:var(--txt)}
+.synth-era .l{font-size:10px;color:var(--muted);margin-top:2px}
+.evt-lore-box{margin-top:8px;padding:9px 11px;background:rgba(0,0,0,0.25);border:1px solid var(--border2);border-left:3px solid var(--accent);border-radius:5px;font-size:11px;color:var(--muted);line-height:1.5;max-height:130px;overflow-y:auto}
+.evt-lore-box .lore-h{color:var(--txt2);font-weight:700;margin-bottom:3px;font-size:11px}
 </style>
 </head>
 <body>
@@ -277,20 +333,24 @@ input,select,textarea{font-family:inherit;font-size:inherit}
   <input type="file" id="relations-timeline-csv-input" accept=".csv,text/csv" style="display:none" onchange="handleRelationsTimelineCSVFile(event)">
   <div class="view-tabs">
     <button class="vtab active" id="tab-cal"      onclick="setView('cal')">📅 Calendrier</button>
-    <button class="vtab"        id="tab-timeline" onclick="setView('timeline')">⟷ Timeline</button>
+    <button class="vtab"        id="tab-timeline" onclick="setView('timeline')">⟷ Chronos</button>
     <button class="vtab"        id="tab-factions" onclick="setView('factions')">⬡ Par faction</button>
     <button class="vtab"        id="tab-entities" onclick="setView('entities')">⛓ Réseau</button>
   </div>
   <div id="view-cal"><div id="app"></div><div class="legend" id="legend"></div></div>
   <div id="view-timeline" style="display:none">
+    <div class="chronos-head">
+      <div>
+        <div class="sub">GARANT DU TEMPS · AN −600 → AN +600</div>
+        <h2 class="chronos-title">⟷ CHRONOS</h2>
+      </div>
+      <div class="atlas-badge" id="atlas-badge" title="Atlas — garant de la cohérence">Atlas…</div>
+    </div>
     <div class="timeline-wrap">
       <div class="tl-controls">
-        <select class="tl-filter-faction" id="tl-filter-faction" onchange="renderTimeline()">
-          <option value="">Toutes les factions</option>
-        </select>
         <input class="tl-search" id="tl-search" placeholder="Rechercher un événement…" oninput="renderTimeline()">
         <select class="tl-range-select" id="tl-range-select" onchange="setTLRange(this.value)">
-          <option value="era">Ére</option>
+          <option value="era">Ère (tout)</option>
           <option value="year">Année</option>
           <option value="month">Mois</option>
           <option value="day">Jour</option>
@@ -305,14 +365,27 @@ input,select,textarea{font-family:inherit;font-size:inherit}
           <select id="tl-end-month" onchange="updateTLCustom()"></select>
           <input type="number" id="tl-end-day" placeholder="Jour" min="1" max="30" onchange="updateTLCustom()">
         </div>
+        <div class="tl-zoom" id="tl-zoom-ctrl">
+          <button class="btn-sm" onclick="tlZoom(-1)" title="Dézoomer">−</button>
+          <span class="tl-zoom-label" id="tl-zoom-label">Ère</span>
+          <button class="btn-sm" onclick="tlZoom(1)" title="Zoomer">+</button>
+        </div>
         <div style="display:flex;gap:6px;margin-left:auto">
-          <button class="btn-sm" id="tl-tab-list" onclick="setTLTab('list')">☰ Liste</button>
-          <button class="btn-sm" id="tl-tab-axis" onclick="setTLTab('axis')">⟷ Axe</button>
+          <button class="btn-sm active" id="tl-tab-axis" onclick="setTLTab('axis')">☰ Frise</button>
+          <button class="btn-sm" id="tl-tab-list" onclick="setTLTab('list')">≣ Liste</button>
+          <button class="btn-sm" id="tl-tab-synth" onclick="setTLTab('synth')">◎ Synthèse</button>
         </div>
       </div>
-      <div class="tl-range-summary" id="tl-range-summary">Affichage : Ére</div>
-      <div id="tl-list-view"><div class="tl-list" id="tl-list"></div></div>
-      <div id="tl-axis-view" style="display:none"><div class="tl-h-outer"><div class="tl-h-inner" id="tl-h-inner"><div class="tl-axis"></div></div></div></div>
+      <div class="tl-faction-picker" id="tl-faction-picker">
+        <span class="tl-fp-label">Factions étudiées :</span>
+        <span class="tl-fp-chips" id="tl-fp-chips"></span>
+        <button class="tl-fp-mini" onclick="tlSelectAllFactions(true)">tout</button>
+        <button class="tl-fp-mini" onclick="tlSelectAllFactions(false)">aucun</button>
+      </div>
+      <div class="tl-range-summary" id="tl-range-summary">Affichage : Ère</div>
+      <div id="tl-list-view" style="display:none"><div class="tl-list" id="tl-list"></div></div>
+      <div id="tl-axis-view"><div class="tl-h-outer" id="tl-h-outer"><div class="tl-lanes" id="tl-lanes"></div></div></div>
+      <div id="tl-synth-view" style="display:none"><div class="tl-synth" id="tl-synth"></div></div>
     </div>
   </div>
   <div id="view-factions" style="display:none">
@@ -378,10 +451,15 @@ input,select,textarea{font-family:inherit;font-size:inherit}
         <input type="number" id="evt-recur-n" min="1" placeholder="Ex : 5">
       </div>
       <div class="form-row">
-        <div class="form-group" id="evt-year-group"><label>AN</label><input type="number" id="evt-an" placeholder="421"></div>
+        <div class="form-group" id="evt-year-group"><label>AN (−600 → 600, An 0 = Fondation)</label><input type="number" id="evt-an" min="-600" max="600" placeholder="421"></div>
         <div class="form-group"><label>MOIS</label><select id="evt-month" onchange="updateDayMax()"></select></div>
       </div>
       <div class="form-group"><label>JOUR</label><input type="number" id="evt-day" min="1" max="30" placeholder="1"></div>
+      <div class="form-group">
+        <label>ENTITÉ ATLAS LIÉE <span style="color:var(--muted2)">(cohérence lore)</span></label>
+        <select id="evt-atlas-entity" onchange="onAtlasEntityChange()"><option value="">— Aucune —</option></select>
+        <div id="evt-lore-box" class="evt-lore-box" style="display:none"></div>
+      </div>
       <div class="modal-actions">
         <button type="button" class="btn-cancel" onclick="closeModal('evt-backdrop')">Annuler</button>
         <button type="submit" class="btn-primary">Enregistrer</button>
@@ -506,7 +584,11 @@ const SEASONS_LIST=['Glacies Disciplinae','Aetheria','Chronos Lux','Ferrum Teneb
 const GREGORIAN_MONTHS=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
 const RECUR_LABELS={none:'',annual:'◎ ANNUEL',monthly:'◎ MENSUEL',decadal:'◎ DÉCADAL',every_n_years:'◎ N ANS'};
 
-const S={an:455,month:1,day:null,months:[],factions:[],events:[],silenceDays:[],allEvents:[],entities:[],relations:[],periods:[],isLight:true,tlTab:'list',tlRange:'era',tlCustomStart:null,tlCustomEnd:null,currentView:'cal'};
+const S={an:455,month:1,day:null,months:[],factions:[],events:[],silenceDays:[],allEvents:[],entities:[],relations:[],periods:[],isLight:true,tlTab:'axis',tlRange:'era',tlCustomStart:null,tlCustomEnd:null,currentView:'cal',
+  tlFactions:null,tlZoom:2,atlas:{online:null,entities:[],timeline:[],health:null},atlasLoaded:false};
+// Chronos : domaine temporel & niveaux de zoom (px par an)
+const CHRONOS_MIN=-600,CHRONOS_MAX=600,CHRONOS_SPAN=CHRONOS_MAX-CHRONOS_MIN;
+const TL_ZOOMS=[{px:0.9,label:'Ère'},{px:2,label:'Ère'},{px:6,label:'Siècle'},{px:20,label:'Décennie'},{px:70,label:'Année'},{px:200,label:'Mois'}];
 
 const api={
   async get(u){const r=await fetch(u);if(!r.ok)throw new Error(r.statusText);return r.json()},
@@ -521,6 +603,10 @@ function isRectitudeYear(an){return gregorianYear(an) >= 2413}
 function displayYear(an){if(an===null||an===undefined)return 'Annuel';const g=gregorianYear(an);return g>=2413?`AN ${an} · ${g} grégorien`:`${g} grégorien`}
 function displayYearShort(an){if(an===null||an===undefined)return 'Annuel';const g=gregorianYear(an);return g>=2413?`AN ${an}`:`${g} gr.`}
 function displayCalendarLabel(an){return isRectitudeYear(an)?'Calendrier de la Rectitude':'Calendrier grégorien'}
+/* CHRONOS — libellés relatifs à la Fondation (An 0) */
+function chronosYearLabel(an){if(an===null||an===undefined)return 'Annuel';if(an===0)return 'Fondation · An 0';return an<0?`An ${an} · Avant-Fondation`:`An ${an} · Après-Fondation`}
+function chronosYearShort(an){if(an===null||an===undefined)return 'Annuel';if(an===0)return 'An 0 · Fond.';return `An ${an}`}
+function anFraction(an,month,day){const a=(an===null||an===undefined)?0:an;return a+(((month||1)-1)*30+((day||1)-1))/390}
 function formatDate(an,month,day){const g=gregorianYear(an);if(g<2413){if(month===13)return `JS-0${day} · ${g} gr.`;return `${String(day).padStart(2,'0')}/${String(month).padStart(2,'0')}/${g}`}const p=an<0?'-':'';return`AN-${p}${String(Math.abs(an)).padStart(4,'0')}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`}
 function monthObj(num){if(!isRectitudeYear(S.an) && num>=1 && num<=12){return {num,name:GREGORIAN_MONTHS[num-1],abbr:GREGORIAN_MONTHS[num-1].slice(0,3)}}return S.months.find(m=>m.num===num)||{}}
 function monthTheme(num){if(S.isLight)return{...SEASON_THEMES[monthObj(num).season||null],bg:'#f1f5f9'};return !isRectitudeYear(S.an)?SEASON_THEMES[null]:SEASON_THEMES[monthObj(num).season]||SEASON_THEMES[null]}
@@ -549,8 +635,8 @@ function dateCompare(a,b){
 function tlGroupLabel(e){
   if(S.tlRange==='month')return `Jour ${e.day}`
   if(S.tlRange==='year')return monthObj(e.month).name||`Mois ${e.month}`
-  if(S.tlRange==='day')return displayYearShort(e.an)
-  return displayYearShort(e.an)
+  if(S.tlRange==='day')return chronosYearShort(e.an)
+  return chronosYearShort(e.an)
 }
 function silenceDay(n){return S.silenceDays.find(d=>d.num===n)||{num:n,name:`JS-0${n}`,sub:''}}
 
@@ -577,7 +663,7 @@ function setView(v){
     document.getElementById('view-'+id).style.display=id===v?'block':'none';
     document.getElementById('tab-'+id).classList.toggle('active',id===v);
   });
-  if(v==='timeline'){loadAllEvents().then(()=>renderTimeline())}
+  if(v==='timeline'){Promise.all([loadAllEvents(),loadAtlas()]).then(()=>renderTimeline())}
   if(v==='factions'){loadAllEvents().then(()=>renderFactionTable())}
   if(v==='entities'){Promise.all([loadEntities(),loadRelations(),loadPeriods(),loadAllEvents()]).then(()=>renderEntitiesView())}
 }
@@ -585,8 +671,36 @@ function setTLTab(t){
   S.tlTab=t;
   document.getElementById('tl-list-view').style.display=t==='list'?'block':'none';
   document.getElementById('tl-axis-view').style.display=t==='axis'?'block':'none';
-  document.getElementById('tl-tab-list').classList.toggle('active',t==='list');
-  document.getElementById('tl-tab-axis').classList.toggle('active',t==='axis');
+  document.getElementById('tl-synth-view').style.display=t==='synth'?'block':'none';
+  ['list','axis','synth'].forEach(k=>document.getElementById('tl-tab-'+k).classList.toggle('active',t===k));
+  // Le zoom ne concerne que la frise
+  document.getElementById('tl-zoom-ctrl').style.display=t==='axis'?'flex':'none';
+  renderTimeline();
+}
+/* CHRONOS — connexion Atlas (lecture live, fallback gracieux) */
+async function loadAtlas(){
+  try{
+    const [ent,tl,hp]=await Promise.all([
+      api.get('/api/atlas/entities'),api.get('/api/atlas/timeline'),api.get('/api/atlas/health')]);
+    S.atlas={online:!!ent.online,entities:ent.entities||[],timeline:(tl.events||[]),health:hp.online?hp:null};
+  }catch(e){S.atlas={online:false,entities:[],timeline:[],health:null};}
+  S.atlasLoaded=true;updateAtlasBadge();
+}
+function updateAtlasBadge(){
+  const b=document.getElementById('atlas-badge');if(!b)return;
+  const a=S.atlas;
+  if(a.online===null){b.className='atlas-badge';b.textContent='Atlas…';return}
+  if(!a.online){b.className='atlas-badge off';b.textContent='⚠ Atlas hors ligne';return}
+  const h=a.health&&a.health.health?a.health.health:null;
+  const contra=h&&h.contradictions?h.contradictions.length:0;
+  const tot=a.health&&a.health.totals?a.health.totals:{};
+  if(contra>0){b.className='atlas-badge warn';b.textContent=`Atlas · ${contra} contradiction(s)`;}
+  else{b.className='atlas-badge ok';b.textContent=`Atlas ✓ cohérent · ${tot.nodes||0} nœuds`;}
+}
+function tlZoom(dir){
+  const cur=TL_ZOOMS.findIndex(z=>z.px===S.tlZoom);
+  let i=(cur<0?1:cur)+dir;i=Math.max(0,Math.min(TL_ZOOMS.length-1,i));
+  S.tlZoom=TL_ZOOMS[i].px;document.getElementById('tl-zoom-label').textContent=TL_ZOOMS[i].label;
   renderTimeline();
 }
 
@@ -718,29 +832,42 @@ function renderLegend(){
 }
 
 /* TIMELINE */
+/* CHRONOS — sélection multi-factions (clé = id de faction en string, ou 'none') */
+function factionKey(e){return e.faction_id!=null?String(e.faction_id):'none'}
+function tlAllKeys(){return [...S.factions.map(f=>String(f.id)),'none']}
+function tlFactionOn(key){return S.tlFactions===null||S.tlFactions.has(key)}
+function renderFactionPicker(){
+  const chips=[...S.factions.map(f=>({key:String(f.id),name:f.name,color:f.border_color||'#6b7280'})),
+               {key:'none',name:'Sans faction',color:'#6b7280'}];
+  document.getElementById('tl-fp-chips').innerHTML=chips.map(c=>
+    `<span class="tl-fp-chip ${tlFactionOn(c.key)?'on':''}" onclick="tlToggleFaction('${c.key}')">
+       <span class="dot" style="background:${c.color}"></span>${c.name}</span>`).join('');
+}
+function tlToggleFaction(key){
+  if(S.tlFactions===null)S.tlFactions=new Set(tlAllKeys());
+  if(S.tlFactions.has(key))S.tlFactions.delete(key);else S.tlFactions.add(key);
+  if(S.tlFactions.size===tlAllKeys().length)S.tlFactions=null; // tout coché = null
+  renderTimeline();
+}
+function tlSelectAllFactions(on){S.tlFactions=on?null:new Set();renderTimeline();}
+
 function tlFiltered(){
-  const fid=document.getElementById('tl-filter-faction').value;
   const q=(document.getElementById('tl-search').value||'').toLowerCase();
   return S.allEvents.filter(e=>{
     if(e.is_annual&&e.recurrence==='annual')return false;
-    if(fid&&String(e.faction_id)!==fid)return false;
+    if(!tlFactionOn(factionKey(e)))return false;
     if(q&&!e.name.toLowerCase().includes(q)&&!(e.description||'').toLowerCase().includes(q))return false;
     return true;
-  }).sort((a,b)=>{
-    const ya=a.an!==null?gregorianYear(a.an):2413;
-    const yb=b.an!==null?gregorianYear(b.an):2413;
-    return (ya*10000+(a.month*100)+a.day)-(yb*10000+(b.month*100)+b.day);
-  });
+  }).sort((a,b)=>anFraction(a.an,a.month,a.day)-anFraction(b.an,b.month,b.day));
 }
 
 function renderTimeline(){
-  const sel=document.getElementById('tl-filter-faction');
-  const cur=sel.value;
-  sel.innerHTML='<option value="">Toutes les factions</option>'+S.factions.map(f=>`<option value="${f.id}">${f.name}</option>`).join('');
-  sel.value=cur;
+  renderFactionPicker();
   const visible=tlRangeFilter(tlFiltered());
-  document.getElementById('tl-range-summary').textContent=`Affichage : ${document.getElementById('tl-range-select').selectedOptions[0].textContent}`;
-  S.tlTab==='list'?renderTLList(visible):renderTLAxis(visible);
+  document.getElementById('tl-range-summary').textContent=`Affichage : ${document.getElementById('tl-range-select').selectedOptions[0].textContent} · ${visible.length} événement(s)`;
+  if(S.tlTab==='list')renderTLList(visible);
+  else if(S.tlTab==='synth')renderTLSynth(visible);
+  else renderTLAxis(visible);
 }
 
 function renderTLList(evts){
@@ -756,7 +883,7 @@ function renderTLList(evts){
     const items=blocks[group].map(e=>{
       const b=e.border_color||'#6b7280',t=e.text_color||'#d1d5db';
       const M=monthObj(e.month);
-      const ds=e.month===13?`${displayYearShort(e.an)} · JS-0${e.day}`:`${displayYearShort(e.an)} · ${M.name||''} ${e.day}`;
+      const ds=e.month===13?`${chronosYearShort(e.an)} · JS-0${e.day}`:`${chronosYearShort(e.an)} · ${M.name||''} ${e.day}`;
       return `<div class="tl-list-item" style="border-left-color:${b}">
         <div class="tl-list-date">${ds}</div>
         <div class="tl-list-name">${e.name}</div>
@@ -768,45 +895,103 @@ function renderTLList(evts){
   }).join('');
 }
 
+/* CHRONOS — frise à swimlanes (1 ligne par faction), auto-fit + zoom */
 function renderTLAxis(evts){
-  const inner=document.getElementById('tl-h-inner');
-  if(!evts.length){inner.innerHTML='<div class="tl-axis"></div><div style="text-align:center;padding:50px;color:var(--muted)">Aucun événement.</div>';return}
-  const years=evts.map(e=>e.an!==null?gregorianYear(e.an):2413);
-  const minY=Math.min(...years),maxY=Math.max(...years);
-  const span=Math.max(maxY-minY,10);
-  const W=Math.max(900,span*14);
-  inner.style.width=W+'px';
-  const xOf=y=>((y-minY)/span*(W-100))+50;
-  const tip=document.getElementById('tl-tooltip');
-
-  const step=span<=30?5:span<=100?10:span<=300?25:span<=600?50:100;
+  const box=document.getElementById('tl-lanes');
+  const LW=150;
+  if(!evts.length){box.style.width='';box.innerHTML='<div class="tl-lanes-empty">Aucun événement dans cette sélection.<br><span style="font-size:11px">Ajuste les factions étudiées ou la plage temporelle.</span></div>';return}
+  // domaine adaptatif, Fondation (An 0) toujours incluse
+  let minA=Math.min(0,...evts.map(e=>e.an||0)), maxA=Math.max(0,...evts.map(e=>e.an||0));
+  if(minA===maxA){minA-=2;maxA+=2;}
+  const pad=(maxA-minA)*0.05+0.5; minA-=pad; maxA+=pad;
+  const dspan=maxA-minA||1;
+  const trackW=Math.min(40000,Math.max(720,dspan*S.tlZoom));
+  const xOf=a=>((a-minA)/dspan)*trackW;
+  // ruler
+  const approx=dspan/Math.max(1,(trackW/90));
+  const step=[1,2,5,10,25,50,100,200,500,1000].find(s=>s>=approx)||1000;
   let marks='';
-  for(let y=Math.ceil(minY/step)*step;y<=maxY;y+=step){
-    const x=xOf(y);
-    const label = y>=2413?`AN ${y-2413}`:`${y}`;
-    marks+=`<div class="tl-year-mark" style="left:${x}px">${label}</div><div class="tl-year-tick" style="left:${x}px"></div>`;
+  for(let y=Math.ceil(minA/step)*step;y<=maxA;y+=step){
+    const x=xOf(y);const lbl=y===0?'⚑ FOND.':`An ${y}`;
+    marks+=`<div class="tl-ruler-tick" style="left:${x}px"></div><div class="tl-ruler-mark" style="left:${x}px">${lbl}</div>`;
   }
-  let dots='',labels='';
-  evts.forEach((e,i)=>{
-    const year = e.an!==null?gregorianYear(e.an):2413;
-    const x=xOf(year);const c=e.border_color||'#6b7280';
-    const above=i%2===0;
-    const sn=e.name.replace(/'/g,"\\'").replace(/"/g,'&quot;');
-    const sd=(e.description||'').substring(0,80).replace(/'/g,"\\'").replace(/"/g,'&quot;');
-    const sf=(e.faction_name||'').replace(/'/g,"\\'");
-    dots+=`<div class="tl-dot" style="left:${x}px;background:${c}"
-      onmouseenter="showTip(event,'${sn}','${sf}',${e.an},'${sd}')"
-      onmouseleave="hideTip()"
-      onclick="openEventModal(${e.id})"></div>`;
-    labels+=`<div class="tl-label" style="left:${x}px;${above?'bottom:calc(52% + 4px)':'top:calc(52% + 4px)'};color:${c}"
-      onclick="openEventModal(${e.id})">${e.name}</div>`;
-  });
-  inner.innerHTML=`<div class="tl-axis"></div>${marks}${dots}${labels}`;
+  // Fondation overlay (An 0) si dans le domaine
+  let foundation='';
+  if(minA<=0&&maxA>=0){const fx=xOf(0);
+    foundation=`<div class="tl-foundation" style="left:calc(${LW}px + ${fx}px)"><div class="tl-foundation-label" style="top:26px">FONDATION</div></div>`;}
+  // lanes = factions "on" ayant des événements, dans l'ordre, + Sans faction
+  const byKey={};evts.forEach(e=>{(byKey[factionKey(e)]=byKey[factionKey(e)]||[]).push(e)});
+  const laneDefs=[...S.factions.map(f=>({key:String(f.id),name:f.name,color:f.border_color||'#6b7280',text:f.text_color||'#d1d5db'})),
+                  {key:'none',name:'Sans faction',color:'#6b7280',text:'#9ca3af'}]
+    .filter(l=>byKey[l.key]&&byKey[l.key].length);
+  const lanesHtml=laneDefs.map(l=>{
+    const items=byKey[l.key].slice().sort((a,b)=>anFraction(a.an,a.month,a.day)-anFraction(b.an,b.month,b.day));
+    let lastX=-999,stack=0,evHtml='';
+    items.forEach(e=>{
+      const x=xOf(anFraction(e.an,e.month,e.day));
+      if(x-lastX<16)stack++;else stack=0;lastX=x;
+      const top=50-Math.min(stack,3)*15;
+      const sn=e.name.replace(/'/g,"\\'").replace(/"/g,'&quot;');
+      const sd=(e.description||'').substring(0,90).replace(/'/g,"\\'").replace(/"/g,'&quot;');
+      evHtml+=`<div class="tl-ev" style="left:${x}px;top:${top}%">
+        <div class="tl-ev-dot" style="background:${l.color}"
+          onmouseenter="showTip(event,'${sn}','${l.name.replace(/'/g,"\\'")}',${e.an},'${sd}')" onmouseleave="hideTip()"
+          onclick="openEventModal(${e.id})"></div>
+        ${stack===0?`<div class="tl-ev-label">${e.name}</div>`:''}</div>`;
+    });
+    return `<div class="tl-lane">
+      <div class="tl-lane-label" style="color:${l.text}"><span class="dot" style="background:${l.color}"></span>${l.name}<span class="cnt">${items.length}</span></div>
+      <div class="tl-lane-track" style="width:${trackW}px">${evHtml}</div>
+    </div>`;
+  }).join('');
+  box.style.setProperty('--lane-label-w',LW+'px');
+  box.style.width=(LW+trackW)+'px';
+  box.innerHTML=`<div class="tl-ruler" style="width:${trackW}px">${marks}</div>${foundation}${lanesHtml}`;
+}
+
+/* CHRONOS — vue globale synthétique */
+function renderTLSynth(evts){
+  const el=document.getElementById('tl-synth');
+  const dated=evts.filter(e=>e.an!==null);
+  const ans=dated.map(e=>e.an);
+  const before=dated.filter(e=>e.an<0).length, at=dated.filter(e=>e.an===0).length, after=dated.filter(e=>e.an>0).length;
+  const spanTxt=ans.length?`De ${chronosYearShort(Math.min(...ans))} à ${chronosYearShort(Math.max(...ans))}`:'—';
+  // par faction
+  const facCount={};evts.forEach(e=>{const k=e.faction_name||'Sans faction';facCount[k]=(facCount[k]||0)+1});
+  const facRows=Object.entries(facCount).sort((a,b)=>b[1]-a[1]);
+  const facMax=Math.max(1,...facRows.map(r=>r[1]));
+  const facColor=n=>{const f=S.factions.find(f=>f.name===n);return f?f.border_color:'#6b7280'};
+  const facBars=facRows.map(([n,c])=>`<div class="synth-bar-row"><span class="synth-bar-name" title="${n}">${n}</span>
+    <span class="synth-bar-track"><span class="synth-bar-fill" style="width:${c/facMax*100}%;background:${facColor(n)}"></span></span>
+    <span class="synth-bar-val">${c}</span></div>`).join('')||'<div class="synth-sub">Aucun</div>';
+  // décennies denses
+  const dec={};dated.forEach(e=>{const d=Math.floor(e.an/10)*10;dec[d]=(dec[d]||0)+1});
+  const topDec=Object.entries(dec).sort((a,b)=>b[1]-a[1]).slice(0,4)
+    .map(([d,c])=>`<div class="synth-bar-row"><span class="synth-bar-name">An ${d} → ${+d+9}</span>
+      <span class="synth-bar-track"><span class="synth-bar-fill" style="width:${c/Math.max(...Object.values(dec))*100}%;background:var(--accent)"></span></span>
+      <span class="synth-bar-val">${c}</span></div>`).join('')||'<div class="synth-sub">—</div>';
+  // Atlas
+  const a=S.atlas;const tot=a.health&&a.health.totals?a.health.totals:{};
+  const contra=a.health&&a.health.health&&a.health.health.contradictions?a.health.health.contradictions.length:0;
+  const atlasCard=a.online?
+    `<div class="synth-big" style="color:${contra?'#fcd34d':'#86efac'}">${contra?'⚠ '+contra:'✓'}</div>
+     <div class="synth-sub">${contra?'contradiction(s) canon':'Graphe cohérent'}</div>
+     <div class="synth-sub" style="margin-top:8px">${tot.nodes||0} nœuds · ${tot.relations||0} relations · ${tot.factions||0} factions</div>`
+    :`<div class="synth-big off" style="color:var(--muted)">—</div><div class="synth-sub">Atlas hors ligne</div>`;
+  el.innerHTML=`
+    <div class="synth-card"><h4>Événements affichés</h4><div class="synth-big">${evts.length}</div><div class="synth-sub">${spanTxt}</div></div>
+    <div class="synth-card"><h4>Répartition par ère</h4><div class="synth-era">
+      <div><div class="n">${before}</div><div class="l">Avant-Fond.</div></div>
+      <div><div class="n">${at}</div><div class="l">Fondation</div></div>
+      <div><div class="n">${after}</div><div class="l">Après-Fond.</div></div></div></div>
+    <div class="synth-card" style="grid-column:span 2"><h4>Événements par faction</h4>${facBars}</div>
+    <div class="synth-card"><h4>Décennies les plus denses</h4>${topDec}</div>
+    <div class="synth-card"><h4>Cohérence Atlas</h4>${atlasCard}</div>`;
 }
 
 function showTip(ev,name,fac,an,desc){
   const t=document.getElementById('tl-tooltip');
-  const label = an===null? 'Annuel' : displayYearShort(an);
+  const label = an===null? 'Annuel' : chronosYearShort(an);
   t.innerHTML=`<div style="font-weight:bold;margin-bottom:4px">${name}</div><div style="color:var(--muted);font-size:11px">${label} · ${fac||'—'}</div>${desc?`<div style="margin-top:5px;font-size:11px;color:var(--muted)">${desc}…</div>`:''}`;
   t.classList.remove('hidden');t.style.left=(ev.clientX+12)+'px';t.style.top=(ev.clientY-10)+'px';
 }
@@ -1274,11 +1459,29 @@ function updateDayMax(){
   const an=parseInt(document.getElementById('evt-an').value||S.an);
   document.getElementById('evt-day').max=m===13?(isBissextile(an)?6:5):30;
 }
+async function onAtlasEntityChange(){
+  const slug=document.getElementById('evt-atlas-entity').value;
+  const box=document.getElementById('evt-lore-box');
+  if(!slug){box.style.display='none';return}
+  box.style.display='block';box.innerHTML='<span style="color:var(--muted)">Chargement du lore Atlas…</span>';
+  try{
+    const d=await api.get('/api/atlas/lore/'+encodeURIComponent(slug));
+    if(!d.online){box.innerHTML='<span style="color:var(--muted)">Atlas hors ligne.</span>';return}
+    if(String(d.found)!=='True'&&!d.body){box.innerHTML='<span style="color:var(--muted)">Aucune fiche lore pour cette entité.</span>';return}
+    const excerpt=(d.body||'').replace(/\s+/g,' ').trim().slice(0,320);
+    box.innerHTML=`<div class="lore-h">◈ ${slug} · ${d.words||0} mots</div>${excerpt}…`;
+  }catch(e){box.innerHTML='<span style="color:var(--muted)">Lore indisponible.</span>';}
+}
 function openEventModal(id=null,preDay=null){
   const fs=document.getElementById('evt-faction');
   fs.innerHTML='<option value="">— Aucune —</option>'+S.factions.map(f=>`<option value="${f.id}">${f.name}</option>`).join('');
   const ms=document.getElementById('evt-month');
   ms.innerHTML=S.months.map(m=>`<option value="${m.num}">${String(m.num).padStart(2,'0')} — ${m.name}</option>`).join('');
+  // Sélecteur d'entité Atlas (si l'Atlas est en ligne)
+  const aes=document.getElementById('evt-atlas-entity');
+  aes.innerHTML='<option value="">— Aucune —</option>'+(S.atlas.online?S.atlas.entities.map(e=>`<option value="${e.id}">${e.label} · ${e.category||''}</option>`).join(''):'');
+  aes.disabled=!S.atlas.online;
+  document.getElementById('evt-lore-box').style.display='none';
   if(id!==null){
     const e=S.events.find(x=>x.id===id)||S.allEvents.find(x=>x.id===id);if(!e)return;
     document.getElementById('evt-title').textContent="Modifier l'Événement";
@@ -1291,6 +1494,8 @@ function openEventModal(id=null,preDay=null){
     document.getElementById('evt-an').value=e.an??S.an;
     document.getElementById('evt-month').value=e.month;
     document.getElementById('evt-day').value=e.day;
+    document.getElementById('evt-atlas-entity').value=e.atlas_entity||'';
+    if(e.atlas_entity)onAtlasEntityChange();
   }else{
     document.getElementById('evt-title').textContent='Nouvel Événement';
     document.getElementById('evt-id').value='';document.getElementById('evt-form').reset();
@@ -1310,9 +1515,10 @@ document.getElementById('evt-form').addEventListener('submit',async e=>{
     faction_id:parseInt(document.getElementById('evt-faction').value)||null,
     recurrence:recur,recur_n:parseInt(document.getElementById('evt-recur-n').value)||null,
     is_annual:recur==='annual',
-    an:recur==='annual'?null:(parseInt(document.getElementById('evt-an').value)||S.an),
+    an:recur==='annual'?null:(()=>{const v=document.getElementById('evt-an').value;return v===''?S.an:parseInt(v)})(),
     month:parseInt(document.getElementById('evt-month').value),
     day:parseInt(document.getElementById('evt-day').value),
+    atlas_entity:document.getElementById('evt-atlas-entity').value||null,
   };
   if(!payload.name)return;
   try{
@@ -1414,8 +1620,15 @@ async function init(){
   document.getElementById('theme-btn').textContent = S.isLight ? '🌙 Sombre' : '☀ Clair';
   document.getElementById('tl-range-select').value = S.tlRange;
   render();
-  setTLTab('list');
+  applyHashView();
 }
+// Deep-link : #chronos / #factions / #reseau ouvrent la vue correspondante
+function applyHashView(){
+  const map={chronos:'timeline',timeline:'timeline',factions:'factions',reseau:'entities',calendrier:'cal'};
+  const v=map[(location.hash||'').replace('#','').toLowerCase()];
+  if(v)setView(v);
+}
+window.addEventListener('hashchange',applyHashView);
 init();
 </script>
 </body>
