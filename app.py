@@ -307,21 +307,26 @@ def api_atlas_entities():
 
 @app.route('/api/atlas/timeline')
 def api_atlas_timeline():
-    """Relations datées de l'Atlas (champ `since`). Renvoie l'année entière parsée."""
-    t = _atlas_get('/api/timeline')
-    if t is None:
+    """Relations datées de l'Atlas (`since`) + indice de certitude (metadata.since_confidence).
+
+    Dérivé de /api/graph (qui porte les métadonnées) plutôt que de /api/timeline.
+    """
+    g = _atlas_get('/api/graph')
+    if g is None:
         return jsonify({'online': False, 'events': []})
+    labels = {n.get('id'): n.get('label') for n in g.get('nodes', [])}
     out = []
-    for r in t:
+    for r in g.get('relations', []):
         since = (r.get('since') or 'An0')
         try:
             an = int(since.replace('An', ''))
         except ValueError:
             an = 0
         out.append({
-            'id': r.get('id'), 'an': an, 'since': since, 'type': r.get('type'),
-            'source': r.get('source'), 'source_label': r.get('source_label'),
-            'target': r.get('target'), 'target_label': r.get('target_label'),
+            'id': r.get('id'), 'an': an, 'since': since, 'type': r.get('rel_type'),
+            'source': r.get('source'), 'source_label': labels.get(r.get('source'), r.get('source')),
+            'target': r.get('target'), 'target_label': labels.get(r.get('target'), r.get('target')),
+            'confidence': (r.get('metadata') or {}).get('since_confidence'),
         })
     return jsonify({'online': True, 'events': out})
 

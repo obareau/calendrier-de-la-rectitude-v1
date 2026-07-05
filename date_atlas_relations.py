@@ -56,6 +56,7 @@ def main():
     labels = {n['id']: n['label'] for n in graph['nodes']}
 
     applied, skipped, missing, collisions = 0, 0, 0, []
+    by_conf = {}  # répartition par indice de certitude
     # détection de collisions : plusieurs relations à la même date exacte
     seen_dates = {}
 
@@ -74,22 +75,28 @@ def main():
             missing += 1
             continue
         seen_dates.setdefault(since, []).append(rid)
+        conf = w.get('confidence', 'certain')
+        by_conf[conf] = by_conf.get(conf, 0) + 1
+        meta = dict(cur.get('metadata') or {})
         lbl = f"{labels.get(w['source'], w['source'])} —{w['rel_type']}→ {labels.get(w['target'], w['target'])}"
-        if cur.get('since') == since:
-            print(f"  = {since:>6}  {lbl}  (déjà à jour)")
+        if cur.get('since') == since and meta.get('since_confidence') == conf:
+            print(f"  = {since:>6}  [{conf:>8}]  {lbl}  (déjà à jour)")
             skipped += 1
             continue
-        print(f"  → {since:>6}  {lbl}   [{w['reason']}]")
+        print(f"  → {since:>6}  [{conf:>8}]  {lbl}   [{w['reason']}]")
         if not args.dry_run:
-            _put(f"/api/relations/{rid}", {'since': since})
+            meta['since_confidence'] = conf  # merge : préserve les autres métadonnées
+            _put(f"/api/relations/{rid}", {'since': since, 'metadata': meta})
         applied += 1
 
     for since, ids in seen_dates.items():
         if len(ids) > 1:
             collisions.append((since, ids))
 
+    conf_str = " · ".join(f"{n} {c}" for c, n in sorted(by_conf.items()))
     print(f"\nRésumé : {applied} {'à appliquer' if args.dry_run else 'appliquées'} · "
           f"{skipped} déjà à jour · {missing} ignorées")
+    print(f"Certitude : {conf_str}")
     if collisions:
         print("Collisions de date (≥2 relations à la même date) — à vérifier côté cohérence :")
         for since, ids in collisions:

@@ -281,6 +281,8 @@ input,select,textarea{font-family:inherit;font-size:inherit}
 .tl-ev-dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--bg2);cursor:pointer;transition:transform .12s;box-shadow:0 1px 3px rgba(0,0,0,.4)}
 .tl-ev-dot:hover{transform:scale(1.45)}
 .tl-ev-atlas .tl-ev-dot{border-radius:2px;transform:rotate(45deg);width:10px;height:10px;opacity:.85}
+.tl-ev-atlas.conf-probable .tl-ev-dot{opacity:.6}
+.tl-ev-atlas.conf-infere .tl-ev-dot{opacity:.4;border-style:dashed}
 .tl-ev-label{position:absolute;left:50%;transform:translateX(-50%);top:14px;font-size:9px;white-space:nowrap;max-width:130px;overflow:hidden;text-overflow:ellipsis;color:var(--muted);pointer-events:none}
 .tl-lanes-empty{padding:40px;text-align:center;color:var(--muted)}
 /* synthèse */
@@ -1074,9 +1076,10 @@ function renderTLAxis(evts){
       if(x-lastX<16)stack++;else stack=0;lastX=x;
       const top=50-Math.min(stack,3)*15;
       const nm=`${r.source_label} —${r.type}→ ${r.target_label}`.replace(/'/g,"\\'").replace(/"/g,'&quot;');
-      evHtml+=`<div class="tl-ev tl-ev-atlas" style="left:${x}px;top:${top}%">
+      const conf=r.confidence||'certain';
+      evHtml+=`<div class="tl-ev tl-ev-atlas conf-${conf}" style="left:${x}px;top:${top}%">
         <div class="tl-ev-dot" style="background:var(--accent)"
-          onmouseenter="showTip(event,'${nm}','◈ Atlas',${r.an},'relation ${r.type}')" onmouseleave="hideTip()"></div>
+          onmouseenter="showTip(event,'${nm}','◈ Atlas · ${conf}',${r.an},'relation ${r.type}')" onmouseleave="hideTip()"></div>
         ${stack===0?`<div class="tl-ev-label">${r.source_label}→${r.target_label}</div>`:''}</div>`;
     });
     atlasLaneHtml=`<div class="tl-lane">
@@ -1180,7 +1183,7 @@ function focusItems(){
   (S.atlas.timeline||[]).forEach(e=>{
     if(!e.an||e.an===0)return;const af=e.an;
     if(af>=lo&&af<hi)
-      items.push({kind:'atlas',an:e.an,month:null,day:null,af,
+      items.push({kind:'atlas',an:e.an,month:null,day:null,af,confidence:e.confidence,
         name:`${e.source_label} —${e.type}→ ${e.target_label}`,
         faction:'◈ Relations Atlas',color:'var(--accent)',slugs:[e.source,e.target]});
   });
@@ -1219,10 +1222,12 @@ function renderTLFocus(){
     const g=groups[n];const its=g.items.slice().sort((a,b)=>a.af-b.af);
     const rows=its.map(it=>{
       const v=lifespanViolation(it);
+      const conf=(it.kind==='atlas'&&it.confidence&&it.confidence!=='certain')
+        ?` <span class="ftag" style="border-color:var(--warn);color:#92400e">${it.confidence}</span>`:'';
       const tag=v?` <span class="ftag" style="border-color:#dc2626;color:#fca5a5">⚠ ${v.why}</span>`
         :(it.slugs.length?` <span class="ftag">◈ ${it.slugs.join(', ')}</span>`:'');
       return `<div class="focus-item ${it.kind==='atlas'?'atlas':''} ${v?'bad':''}">
-        <span class="fdate">${focusDateLabel(it)}</span><span class="fname">${it.name}${tag}</span></div>`;
+        <span class="fdate">${focusDateLabel(it)}</span><span class="fname">${it.name}${tag}${conf}</span></div>`;
     }).join('');
     return `<div class="focus-group"><div class="focus-group-head" style="border-left-color:${g.color}">${n}<span class="cnt">${its.length}</span></div>${rows}</div>`;
   }).join('');
