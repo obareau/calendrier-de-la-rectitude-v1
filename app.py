@@ -342,6 +342,29 @@ def api_atlas_health():
     return jsonify({'online': True, 'health': s.get('health', {}),
                     'totals': s.get('totals', {}), 'factions': s.get('factions', [])})
 
+@app.route('/api/atlas/tensions')
+def api_atlas_tensions():
+    """Tensions inférées entre factions/entités (alliance/conflit) — pour la cohérence."""
+    t = _atlas_get('/api/tensions')
+    if t is None:
+        return jsonify({'online': False, 'tensions': []})
+    return jsonify({'online': True, 'tensions': t})
+
+_LORE_TEMPORAL = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'lore_temporal.json')
+
+@app.route('/api/lore-temporal')
+def api_lore_temporal():
+    """Curation temporelle du lore (durées de vie + relations datées) pour la cohérence.
+
+    Vérité du temps côté Chronos ; sert de base au moteur d'impossibilités temporelles.
+    """
+    try:
+        with open(_LORE_TEMPORAL, encoding='utf-8') as f:
+            data = json.load(f)
+    except (OSError, ValueError):
+        return jsonify({'entities': {}, 'relations': []})
+    return jsonify({'entities': data.get('entities', {}), 'relations': data.get('relations', [])})
+
 # MONTHS
 @app.route('/api/months')
 def api_months():

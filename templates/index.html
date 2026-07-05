@@ -300,6 +300,37 @@ input,select,textarea{font-family:inherit;font-size:inherit}
 .synth-era .l{font-size:10px;color:var(--muted);margin-top:2px}
 .evt-lore-box{margin-top:8px;padding:9px 11px;background:rgba(0,0,0,0.25);border:1px solid var(--border2);border-left:3px solid var(--accent);border-radius:5px;font-size:11px;color:var(--muted);line-height:1.5;max-height:130px;overflow-y:auto}
 .evt-lore-box .lore-h{color:var(--txt2);font-weight:700;margin-bottom:3px;font-size:11px}
+/* FOCUS (explorateur temporel) */
+.focus-bar{display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap;padding:12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;margin-bottom:12px}
+.focus-bar label{display:block;font-size:10px;color:var(--muted);letter-spacing:.06em;margin-bottom:3px}
+.focus-date{display:flex;gap:8px;align-items:flex-end}
+.focus-date input,.focus-date select{padding:6px 8px;background:var(--bg);border:1px solid var(--border2);border-radius:5px;color:var(--txt2);font-size:12px}
+.focus-date input[type=number]{width:74px}
+.focus-grans{display:flex;gap:6px}
+.focus-fuzzy{min-width:170px}
+.focus-fuzzy input[type=range]{width:100%;accent-color:var(--accent)}
+.focus-fuzz-label,#focus-fuzz-label{color:var(--accent);font-weight:700}
+.focus-summary{font-size:12px;color:var(--muted);margin-bottom:10px}
+.focus-grid{display:grid;grid-template-columns:1fr 320px;gap:14px}
+@media(max-width:840px){.focus-grid{grid-template-columns:1fr}}
+.focus-group{border:1px solid var(--border);border-radius:8px;margin-bottom:10px;overflow:hidden;background:var(--bg3)}
+.focus-group-head{display:flex;align-items:center;gap:8px;padding:8px 12px;font-size:12px;font-weight:700;border-left:4px solid var(--border2);background:var(--bg2)}
+.focus-group-head .cnt{margin-left:auto;font-size:10px;color:var(--muted);font-weight:400}
+.focus-item{display:flex;gap:10px;align-items:baseline;padding:7px 12px;border-top:1px dashed var(--border)}
+.focus-item .fdate{font-size:11px;color:var(--muted);min-width:118px;flex-shrink:0;font-weight:600}
+.focus-item .fname{font-size:13px;color:var(--txt2)}
+.focus-item .ftag{font-size:10px;color:var(--muted);margin-left:6px;border:1px solid var(--border2);border-radius:8px;padding:1px 6px}
+.focus-item.atlas .fname{color:var(--accent)}
+.focus-item.bad{background:rgba(127,29,29,0.18)}
+.focus-empty{padding:30px;text-align:center;color:var(--muted)}
+.focus-coherence h4{font-size:11px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin:0 0 8px}
+.coh-card{border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:10px;background:var(--bg3);font-size:12px}
+.coh-verdict{font-weight:700;font-size:12px;margin-bottom:4px}
+.coh-ok{color:#86efac}.coh-warn{color:#fcd34d}.coh-bad{color:#fca5a5}
+.coh-card.bad{border-color:#dc2626;background:rgba(127,29,29,0.15)}
+.coh-card.warn{border-color:#f59e0b;background:rgba(61,44,0,0.15)}
+.coh-line{color:var(--muted);line-height:1.5}
+.coh-none{color:var(--muted);font-size:12px;padding:8px 0}
 </style>
 </head>
 <body>
@@ -374,6 +405,7 @@ input,select,textarea{font-family:inherit;font-size:inherit}
           <button class="btn-sm active" id="tl-tab-axis" onclick="setTLTab('axis')">☰ Frise</button>
           <button class="btn-sm" id="tl-tab-list" onclick="setTLTab('list')">≣ Liste</button>
           <button class="btn-sm" id="tl-tab-synth" onclick="setTLTab('synth')">◎ Synthèse</button>
+          <button class="btn-sm" id="tl-tab-focus" onclick="setTLTab('focus')">◉ Focus</button>
         </div>
       </div>
       <div class="tl-faction-picker" id="tl-faction-picker">
@@ -386,6 +418,37 @@ input,select,textarea{font-family:inherit;font-size:inherit}
       <div id="tl-list-view" style="display:none"><div class="tl-list" id="tl-list"></div></div>
       <div id="tl-axis-view"><div class="tl-h-outer" id="tl-h-outer"><div class="tl-lanes" id="tl-lanes"></div></div></div>
       <div id="tl-synth-view" style="display:none"><div class="tl-synth" id="tl-synth"></div></div>
+      <div id="tl-focus-view" style="display:none">
+        <div class="focus-bar">
+          <div class="focus-date">
+            <label>AN</label><input type="number" id="focus-an" min="-600" max="600" onchange="setFocus('an',this.value)">
+            <label>MOIS</label><select id="focus-month" onchange="setFocus('month',this.value)"></select>
+            <label>JOUR</label><input type="number" id="focus-day" min="1" max="30" onchange="setFocus('day',this.value)">
+          </div>
+          <div class="focus-grans">
+            <button class="btn-sm active" id="focus-g-year"  onclick="setFocusGran('year')">Cette année-là</button>
+            <button class="btn-sm" id="focus-g-month" onclick="setFocusGran('month')">Ce mois-là</button>
+            <button class="btn-sm" id="focus-g-day"   onclick="setFocusGran('day')">Ce jour-là</button>
+          </div>
+          <div class="focus-fuzzy">
+            <label>Fuzzy <span id="focus-fuzz-label">exact</span></label>
+            <input type="range" id="focus-fuzz" min="0" max="20" value="0" oninput="setFocus('fuzz',this.value)">
+          </div>
+          <div class="focus-sort">
+            <label>Trier</label>
+            <select id="focus-sort" onchange="setFocus('sort',this.value)">
+              <option value="faction">Par faction</option>
+              <option value="count">Par nombre</option>
+              <option value="chrono">Chronologique</option>
+            </select>
+          </div>
+        </div>
+        <div class="focus-summary" id="focus-summary"></div>
+        <div class="focus-grid">
+          <div class="focus-groups" id="focus-groups"></div>
+          <div class="focus-coherence" id="focus-coherence"></div>
+        </div>
+      </div>
     </div>
   </div>
   <div id="view-factions" style="display:none">
@@ -585,7 +648,9 @@ const GREGORIAN_MONTHS=['Janvier','Février','Mars','Avril','Mai','Juin','Juille
 const RECUR_LABELS={none:'',annual:'◎ ANNUEL',monthly:'◎ MENSUEL',decadal:'◎ DÉCADAL',every_n_years:'◎ N ANS'};
 
 const S={an:455,month:1,day:null,months:[],factions:[],events:[],silenceDays:[],allEvents:[],entities:[],relations:[],periods:[],isLight:true,tlTab:'axis',tlRange:'era',tlCustomStart:null,tlCustomEnd:null,currentView:'cal',
-  tlFactions:null,tlZoom:2,atlas:{online:null,entities:[],timeline:[],health:null},atlasLoaded:false};
+  tlFactions:null,tlZoom:2,atlas:{online:null,entities:[],timeline:[],health:null,tensions:[]},atlasLoaded:false,
+  focusAn:null,focusMonth:1,focusDay:1,focusGran:'year',focusFuzz:0,focusSort:'faction',
+  loreTemporal:{entities:{},relations:[]}};
 // Chronos : domaine temporel & niveaux de zoom (px par an)
 const CHRONOS_MIN=-600,CHRONOS_MAX=600,CHRONOS_SPAN=CHRONOS_MAX-CHRONOS_MIN;
 const TL_ZOOMS=[{px:0.9,label:'Ère'},{px:2,label:'Ère'},{px:6,label:'Siècle'},{px:20,label:'Décennie'},{px:70,label:'Année'},{px:200,label:'Mois'}];
@@ -672,18 +737,24 @@ function setTLTab(t){
   document.getElementById('tl-list-view').style.display=t==='list'?'block':'none';
   document.getElementById('tl-axis-view').style.display=t==='axis'?'block':'none';
   document.getElementById('tl-synth-view').style.display=t==='synth'?'block':'none';
-  ['list','axis','synth'].forEach(k=>document.getElementById('tl-tab-'+k).classList.toggle('active',t===k));
+  document.getElementById('tl-focus-view').style.display=t==='focus'?'block':'none';
+  ['list','axis','synth','focus'].forEach(k=>document.getElementById('tl-tab-'+k).classList.toggle('active',t===k));
   // Le zoom ne concerne que la frise
   document.getElementById('tl-zoom-ctrl').style.display=t==='axis'?'flex':'none';
+  if(t==='focus')initFocusControls();
   renderTimeline();
 }
 /* CHRONOS — connexion Atlas (lecture live, fallback gracieux) */
 async function loadAtlas(){
+  // lore-temporal est local (durées de vie + relations curées) — toujours chargé
+  try{S.loreTemporal=await api.get('/api/lore-temporal');}catch(e){S.loreTemporal={entities:{},relations:[]};}
   try{
-    const [ent,tl,hp]=await Promise.all([
-      api.get('/api/atlas/entities'),api.get('/api/atlas/timeline'),api.get('/api/atlas/health')]);
-    S.atlas={online:!!ent.online,entities:ent.entities||[],timeline:(tl.events||[]),health:hp.online?hp:null};
-  }catch(e){S.atlas={online:false,entities:[],timeline:[],health:null};}
+    const [ent,tl,hp,tn]=await Promise.all([
+      api.get('/api/atlas/entities'),api.get('/api/atlas/timeline'),
+      api.get('/api/atlas/health'),api.get('/api/atlas/tensions')]);
+    S.atlas={online:!!ent.online,entities:ent.entities||[],timeline:(tl.events||[]),
+             health:hp.online?hp:null,tensions:tn.tensions||[]};
+  }catch(e){S.atlas={online:false,entities:[],timeline:[],health:null,tensions:[]};}
   S.atlasLoaded=true;updateAtlasBadge();
 }
 function updateAtlasBadge(){
@@ -867,6 +938,7 @@ function renderTimeline(){
   document.getElementById('tl-range-summary').textContent=`Affichage : ${document.getElementById('tl-range-select').selectedOptions[0].textContent} · ${visible.length} événement(s)`;
   if(S.tlTab==='list')renderTLList(visible);
   else if(S.tlTab==='synth')renderTLSynth(visible);
+  else if(S.tlTab==='focus')renderTLFocus();
   else renderTLAxis(visible);
 }
 
@@ -987,6 +1059,145 @@ function renderTLSynth(evts){
     <div class="synth-card" style="grid-column:span 2"><h4>Événements par faction</h4>${facBars}</div>
     <div class="synth-card"><h4>Décennies les plus denses</h4>${topDec}</div>
     <div class="synth-card"><h4>Cohérence Atlas</h4>${atlasCard}</div>`;
+}
+
+/* CHRONOS — Focus temporel : cette année-là / ce mois-là / ce jour-là */
+function initFocusControls(){
+  if(S.focusAn===null){S.focusAn=S.an;S.focusMonth=S.month;S.focusDay=S.day||1;}
+  const ms=document.getElementById('focus-month');
+  if(!ms.options.length)ms.innerHTML=S.months.map(m=>`<option value="${m.num}">${String(m.num).padStart(2,'0')} — ${m.name}</option>`).join('');
+  document.getElementById('focus-an').value=S.focusAn;
+  ms.value=S.focusMonth;
+  document.getElementById('focus-day').value=S.focusDay;
+  document.getElementById('focus-fuzz').value=S.focusFuzz;
+  document.getElementById('focus-sort').value=S.focusSort;
+  ['year','month','day'].forEach(g=>document.getElementById('focus-g-'+g).classList.toggle('active',S.focusGran===g));
+  updateFuzzLabel();
+}
+function setFocus(key,val){
+  if(key==='an')S.focusAn=parseInt(val)||0;
+  else if(key==='month')S.focusMonth=parseInt(val);
+  else if(key==='day')S.focusDay=parseInt(val)||1;
+  else if(key==='fuzz'){S.focusFuzz=parseInt(val)||0;updateFuzzLabel();}
+  else if(key==='sort')S.focusSort=val;
+  renderTLFocus();
+}
+function setFocusGran(g){
+  S.focusGran=g;
+  ['year','month','day'].forEach(k=>document.getElementById('focus-g-'+k).classList.toggle('active',g===k));
+  const fz=document.getElementById('focus-fuzz');
+  fz.max=g==='year'?50:g==='month'?12:30;
+  if(S.focusFuzz>+fz.max){S.focusFuzz=+fz.max;fz.value=fz.max;}
+  updateFuzzLabel();renderTLFocus();
+}
+function updateFuzzLabel(){
+  const u=S.focusGran==='year'?'ans':S.focusGran==='month'?'mois':'jours';
+  document.getElementById('focus-fuzz-label').textContent=S.focusFuzz===0?'exact':`± ${S.focusFuzz} ${u}`;
+}
+function focusWindow(){
+  const a=S.focusAn,m=S.focusMonth,d=S.focusDay,f=S.focusFuzz;
+  if(S.focusGran==='year')return {lo:a-f,hi:a+f+1};
+  if(S.focusGran==='month'){const base=a+(m-1)*30/390,half=f*30/390;return {lo:base-half,hi:base+30/390+half};}
+  const base=anFraction(a,m,d),half=f/390;return {lo:base-half,hi:base+1/390+half};
+}
+function focusItems(){
+  const {lo,hi}=focusWindow();const items=[];
+  S.allEvents.forEach(e=>{
+    if(e.an===null||(e.is_annual&&e.recurrence==='annual'))return;
+    const af=anFraction(e.an,e.month,e.day);
+    if(af>=lo&&af<hi&&tlFactionOn(factionKey(e)))
+      items.push({kind:'chronos',an:e.an,month:e.month,day:e.day,af,name:e.name,
+        faction:e.faction_name||'Sans faction',color:e.border_color||'#6b7280',
+        slugs:e.atlas_entity?[e.atlas_entity]:[]});
+  });
+  (S.atlas.timeline||[]).forEach(e=>{
+    if(!e.an||e.an===0)return;const af=e.an;
+    if(af>=lo&&af<hi)
+      items.push({kind:'atlas',an:e.an,month:null,day:null,af,
+        name:`${e.source_label} —${e.type}→ ${e.target_label}`,
+        faction:'◈ Relations Atlas',color:'var(--accent)',slugs:[e.source,e.target]});
+  });
+  return items;
+}
+function lifespanViolation(item){
+  for(const slug of item.slugs){
+    const ls=S.loreTemporal.entities[slug];if(!ls)continue;
+    if(item.an<ls.birth)return {slug,ls,why:`daté An ${item.an} < naissance An ${ls.birth}`};
+    if(ls.death!=null&&item.an>ls.death)return {slug,ls,why:`daté An ${item.an} > mort An ${ls.death}`};
+  }
+  return null;
+}
+function focusDateLabel(it){
+  if(it.kind==='atlas')return chronosYearShort(it.an);
+  const M=monthObj(it.month);
+  return it.month===13?`${chronosYearShort(it.an)} · JS-0${it.day}`:`${chronosYearShort(it.an)} · ${M.name||''} ${it.day}`;
+}
+function renderTLFocus(){
+  const items=focusItems();
+  const gran={year:'Cette année-là',month:'Ce mois-là',day:'Ce jour-là'}[S.focusGran];
+  const fuzz=S.focusFuzz===0?'exact':`± ${S.focusFuzz}`;
+  const dref=chronosYearShort(S.focusAn)
+    +(S.focusGran!=='year'?' · '+(monthObj(S.focusMonth).name||''):'')
+    +(S.focusGran==='day'?' '+S.focusDay:'');
+  document.getElementById('focus-summary').textContent=`${gran} · ${dref} · fenêtre ${fuzz} · ${items.length} événement(s)`;
+  const groups={};
+  items.forEach(it=>{(groups[it.faction]=groups[it.faction]||{items:[],color:it.color}).items.push(it)});
+  let names=Object.keys(groups);
+  if(S.focusSort==='count')names.sort((a,b)=>groups[b].items.length-groups[a].items.length);
+  else if(S.focusSort==='chrono')names.sort((a,b)=>Math.min(...groups[a].items.map(i=>i.af))-Math.min(...groups[b].items.map(i=>i.af)));
+  else names.sort((a,b)=>a.localeCompare(b));
+  const box=document.getElementById('focus-groups');
+  if(!items.length)box.innerHTML='<div class="focus-empty">Aucun événement dans cette fenêtre temporelle.</div>';
+  else box.innerHTML=names.map(n=>{
+    const g=groups[n];const its=g.items.slice().sort((a,b)=>a.af-b.af);
+    const rows=its.map(it=>{
+      const v=lifespanViolation(it);
+      const tag=v?` <span class="ftag" style="border-color:#dc2626;color:#fca5a5">⚠ ${v.why}</span>`
+        :(it.slugs.length?` <span class="ftag">◈ ${it.slugs.join(', ')}</span>`:'');
+      return `<div class="focus-item ${it.kind==='atlas'?'atlas':''} ${v?'bad':''}">
+        <span class="fdate">${focusDateLabel(it)}</span><span class="fname">${it.name}${tag}</span></div>`;
+    }).join('');
+    return `<div class="focus-group"><div class="focus-group-head" style="border-left-color:${g.color}">${n}<span class="cnt">${its.length}</span></div>${rows}</div>`;
+  }).join('');
+  renderFocusCoherence(items);
+}
+function factionRel(a,b){
+  const norm=s=>(s||'').toLowerCase();
+  for(const t of (S.atlas.tensions||[])){
+    const sl=norm(t.source_label),tl=norm(t.target_label),na=norm(a),nb=norm(b);
+    const m=((sl.includes(na)||na.includes(sl))&&(tl.includes(nb)||nb.includes(tl)))
+          ||((sl.includes(nb)||nb.includes(sl))&&(tl.includes(na)||na.includes(tl)));
+    if(m){if(t.suggested_type==='ennemi'||t.neg>t.pos)return 'ennemi';if(t.suggested_type==='allie'||t.pos>t.neg)return 'allie';}
+  }
+  return null;
+}
+function renderFocusCoherence(items){
+  const el=document.getElementById('focus-coherence');
+  let html='<h4>Cohérence — impossibilités temporelles</h4>';
+  const viol=items.map(it=>({it,v:lifespanViolation(it)})).filter(x=>x.v);
+  if(viol.length)html+=viol.map(({it,v})=>`<div class="coh-card bad">
+      <div class="coh-verdict coh-bad">⚠ Incohérence canon</div>
+      <div class="coh-line"><b>${it.name}</b><br>${v.ls.label||v.slug} : ${v.why}<br>(vie An ${v.ls.birth}${v.ls.death!=null?'→'+v.ls.death:'→…'})</div></div>`).join('');
+  else html+='<div class="coh-card"><div class="coh-verdict coh-ok">✓ Rien à signaler</div><div class="coh-line">Tous les événements liés tombent dans la durée de vie de leur entité.</div></div>';
+  html+='<h4 style="margin-top:14px">Collisions de date exacte</h4>';
+  const byDate={};
+  items.filter(i=>i.kind==='chronos').forEach(i=>{const k=`${i.an}|${i.month}|${i.day}`;(byDate[k]=byDate[k]||[]).push(i)});
+  const collisions=Object.values(byDate).filter(g=>g.length>1);
+  if(!collisions.length)html+='<div class="coh-none">Aucune collision (≥2 événements à la même date exacte) dans cette fenêtre.</div>';
+  else html+=collisions.map(g=>{
+    const facs=[...new Set(g.map(i=>i.faction))];
+    let vc='coh-warn',vl='Convergence multi-factions',detail='';
+    if(facs.length===1){vc='coh-ok';vl='Concentration mono-faction';}
+    else{let enemy=false,ally=false;
+      for(let i=0;i<facs.length;i++)for(let j=i+1;j<facs.length;j++){const r=factionRel(facs[i],facs[j]);if(r==='ennemi')enemy=true;if(r==='allie')ally=true;}
+      if(enemy){vc='coh-bad';vl='Tension dramatique';detail='Factions ennemies le même jour.';}
+      else if(ally){vc='coh-ok';vl='Convergence alliée';detail='Factions alliées le même jour.';}
+      else detail='Relation inter-factions non caractérisée.';}
+    return `<div class="coh-card ${vc==='coh-bad'?'bad':vc==='coh-warn'?'warn':''}">
+      <div class="coh-verdict ${vc}">${vl}</div>
+      <div class="coh-line">${focusDateLabel(g[0])} — ${g.length} évts : ${g.map(i=>i.name).join(' · ')}<br>${facs.join(' / ')}${detail?'<br>'+detail:''}</div></div>`;
+  }).join('');
+  el.innerHTML=html;
 }
 
 function showTip(ev,name,fac,an,desc){
