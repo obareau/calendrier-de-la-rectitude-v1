@@ -342,6 +342,27 @@ def api_atlas_health():
     return jsonify({'online': True, 'health': s.get('health', {}),
                     'totals': s.get('totals', {}), 'factions': s.get('factions', [])})
 
+@app.route('/api/atlas/node/<slug>')
+def api_atlas_node(slug):
+    """Détail d'une entité + toutes ses relations (pour la vue Destinée / Les Parques)."""
+    g = _atlas_get('/api/graph')
+    if g is None:
+        return jsonify({'online': False})
+    nodes = {n['id']: n for n in g.get('nodes', [])}
+    rels = []
+    for r in g.get('relations', []):
+        if r.get('source') == slug or r.get('target') == slug:
+            other = r['target'] if r['source'] == slug else r['source']
+            since = r.get('since') or 'An0'
+            try:
+                an = int(since.replace('An', ''))
+            except ValueError:
+                an = 0
+            rels.append({'other': other, 'other_label': nodes.get(other, {}).get('label', other),
+                         'rel_type': r.get('rel_type'), 'direction': 'out' if r['source'] == slug else 'in',
+                         'since': since, 'an': an})
+    return jsonify({'online': True, 'node': nodes.get(slug), 'relations': rels})
+
 @app.route('/api/atlas/tensions')
 def api_atlas_tensions():
     """Tensions inférées entre factions/entités (alliance/conflit) — pour la cohérence."""
