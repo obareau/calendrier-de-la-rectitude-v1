@@ -972,8 +972,11 @@ function renderTLAxis(evts){
   const box=document.getElementById('tl-lanes');
   const LW=150;
   if(!evts.length){box.style.width='';box.innerHTML='<div class="tl-lanes-empty">Aucun événement dans cette sélection.<br><span style="font-size:11px">Ajuste les factions étudiées ou la plage temporelle.</span></div>';return}
+  // relations Atlas datées (overlay) — intégrées au domaine pour rester visibles
+  const atlasRels=(S.atlas.timeline||[]).filter(r=>r.an&&r.an!==0);
   // domaine adaptatif, Fondation (An 0) toujours incluse
-  let minA=Math.min(0,...evts.map(e=>e.an||0)), maxA=Math.max(0,...evts.map(e=>e.an||0));
+  const allAns=[0,...evts.map(e=>e.an||0),...atlasRels.map(r=>r.an)];
+  let minA=Math.min(...allAns), maxA=Math.max(...allAns);
   if(minA===maxA){minA-=2;maxA+=2;}
   const pad=(maxA-minA)*0.05+0.5; minA-=pad; maxA+=pad;
   const dspan=maxA-minA||1;
@@ -1016,9 +1019,28 @@ function renderTLAxis(evts){
       <div class="tl-lane-track" style="width:${trackW}px">${evHtml}</div>
     </div>`;
   }).join('');
+  // lane Atlas (relations datées) en losanges — sous les factions
+  let atlasLaneHtml='';
+  if(atlasRels.length){
+    const its=atlasRels.slice().sort((a,b)=>a.an-b.an);
+    let lastX=-999,stack=0,evHtml='';
+    its.forEach(r=>{
+      const x=xOf(r.an);
+      if(x-lastX<16)stack++;else stack=0;lastX=x;
+      const top=50-Math.min(stack,3)*15;
+      const nm=`${r.source_label} —${r.type}→ ${r.target_label}`.replace(/'/g,"\\'").replace(/"/g,'&quot;');
+      evHtml+=`<div class="tl-ev tl-ev-atlas" style="left:${x}px;top:${top}%">
+        <div class="tl-ev-dot" style="background:var(--accent)"
+          onmouseenter="showTip(event,'${nm}','◈ Atlas',${r.an},'relation ${r.type}')" onmouseleave="hideTip()"></div>
+        ${stack===0?`<div class="tl-ev-label">${r.source_label}→${r.target_label}</div>`:''}</div>`;
+    });
+    atlasLaneHtml=`<div class="tl-lane">
+      <div class="tl-lane-label" style="color:var(--accent)"><span class="dot" style="background:var(--accent)"></span>◈ Atlas<span class="cnt">${its.length}</span></div>
+      <div class="tl-lane-track" style="width:${trackW}px">${evHtml}</div></div>`;
+  }
   box.style.setProperty('--lane-label-w',LW+'px');
   box.style.width=(LW+trackW)+'px';
-  box.innerHTML=`<div class="tl-ruler" style="width:${trackW}px">${marks}</div>${foundation}${lanesHtml}`;
+  box.innerHTML=`<div class="tl-ruler" style="width:${trackW}px">${marks}</div>${foundation}${lanesHtml}${atlasLaneHtml}`;
 }
 
 /* CHRONOS — vue globale synthétique */
