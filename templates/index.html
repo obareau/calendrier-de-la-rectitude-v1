@@ -331,6 +331,40 @@ input,select,textarea{font-family:inherit;font-size:inherit}
 .coh-card.warn{border-color:#f59e0b;background:rgba(61,44,0,0.15)}
 .coh-line{color:var(--muted);line-height:1.5}
 .coh-none{color:var(--muted);font-size:12px;padding:8px 0}
+/* DESTINÉE — Les Parques */
+.dest-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;margin-bottom:16px}
+.dest-bar label{font-size:11px;color:var(--muted);letter-spacing:.1em}
+.dest-bar select{padding:7px 10px;background:var(--bg);border:1px solid var(--border2);border-radius:6px;color:var(--txt2);font-size:13px;min-width:220px}
+.dest-hint{font-size:11px;color:var(--muted2);font-style:italic;margin-left:auto}
+.dest-thread{display:grid;grid-template-columns:1fr 1.4fr 1fr;gap:0;align-items:stretch}
+@media(max-width:840px){.dest-thread{grid-template-columns:1fr}}
+.parque{position:relative;padding:18px 18px 20px;border:1px solid var(--border);background:var(--bg3)}
+.parque:first-child{border-radius:10px 0 0 10px}
+.parque:last-child{border-radius:0 10px 10px 0}
+@media(max-width:840px){.parque,.parque:first-child,.parque:last-child{border-radius:10px;margin-bottom:10px}}
+.parque.clotho{border-top:3px solid #60a5fa}
+.parque.lachesis{border-top:3px solid #f472b6}
+.parque.atropos{border-top:3px solid #9ca3af}
+.parque-role{font-size:10px;letter-spacing:.14em;color:var(--muted);text-transform:uppercase}
+.parque-name{font-size:16px;font-weight:700;margin:2px 0 2px}
+.parque.clotho .parque-name{color:#60a5fa}.parque.lachesis .parque-name{color:#f472b6}.parque.atropos .parque-name{color:#cbd5e1}
+.parque-tag{font-size:10px;color:var(--muted2);font-style:italic;margin-bottom:12px}
+.parque-date{font-size:26px;font-weight:700;color:var(--txt);line-height:1}
+.parque-sub{font-size:11px;color:var(--muted);margin-top:5px;line-height:1.5}
+.dest-life-len{margin-top:12px;font-size:12px;color:var(--txt2)}
+.thread-line{position:relative;margin:16px 0 4px;max-height:340px;overflow-y:auto;padding-left:14px}
+.thread-line::before{content:'';position:absolute;left:4px;top:4px;bottom:4px;width:2px;background:linear-gradient(#60a5fa,#f472b6,#9ca3af)}
+.thread-node{position:relative;padding:0 0 12px 12px}
+.thread-node::before{content:'';position:absolute;left:-5px;top:4px;width:9px;height:9px;border-radius:50%;background:var(--accent);border:2px solid var(--bg3)}
+.thread-node.ev::before{background:#f472b6}.thread-node.rel::before{background:#60a5fa;border-radius:2px;transform:rotate(45deg)}
+.thread-when{font-size:11px;color:var(--muted);font-weight:700}
+.thread-what{font-size:13px;color:var(--txt2)}
+.thread-with{font-size:11px;color:var(--muted)}
+.dest-rel-group{margin-top:10px}
+.dest-rel-group h5{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:8px 0 4px}
+.dest-rel-chip{display:inline-block;font-size:11px;padding:2px 8px;margin:0 4px 4px 0;border-radius:12px;border:1px solid var(--border2);color:var(--txt2)}
+.dest-rel-chip.dated{border-color:#60a5fa;color:#93c5fd}
+.dest-empty{padding:30px;text-align:center;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -406,6 +440,7 @@ input,select,textarea{font-family:inherit;font-size:inherit}
           <button class="btn-sm" id="tl-tab-list" onclick="setTLTab('list')">≣ Liste</button>
           <button class="btn-sm" id="tl-tab-synth" onclick="setTLTab('synth')">◎ Synthèse</button>
           <button class="btn-sm" id="tl-tab-focus" onclick="setTLTab('focus')">◉ Focus</button>
+          <button class="btn-sm" id="tl-tab-destinee" onclick="setTLTab('destinee')">🧵 Destinée</button>
         </div>
       </div>
       <div class="tl-faction-picker" id="tl-faction-picker">
@@ -448,6 +483,14 @@ input,select,textarea{font-family:inherit;font-size:inherit}
           <div class="focus-groups" id="focus-groups"></div>
           <div class="focus-coherence" id="focus-coherence"></div>
         </div>
+      </div>
+      <div id="tl-destinee-view" style="display:none">
+        <div class="dest-bar">
+          <label>DESTINÉE DE</label>
+          <select id="dest-entity" onchange="renderDestinee()"></select>
+          <span class="dest-hint">Les trois Parques filent, mesurent et coupent le fil de chaque existence.</span>
+        </div>
+        <div class="dest-thread" id="dest-thread"></div>
       </div>
     </div>
   </div>
@@ -738,10 +781,12 @@ function setTLTab(t){
   document.getElementById('tl-axis-view').style.display=t==='axis'?'block':'none';
   document.getElementById('tl-synth-view').style.display=t==='synth'?'block':'none';
   document.getElementById('tl-focus-view').style.display=t==='focus'?'block':'none';
-  ['list','axis','synth','focus'].forEach(k=>document.getElementById('tl-tab-'+k).classList.toggle('active',t===k));
+  document.getElementById('tl-destinee-view').style.display=t==='destinee'?'block':'none';
+  ['list','axis','synth','focus','destinee'].forEach(k=>document.getElementById('tl-tab-'+k).classList.toggle('active',t===k));
   // Le zoom ne concerne que la frise
   document.getElementById('tl-zoom-ctrl').style.display=t==='axis'?'flex':'none';
   if(t==='focus')initFocusControls();
+  if(t==='destinee'){initDestineeSelector();renderDestinee();return;}
   renderTimeline();
 }
 /* CHRONOS — connexion Atlas (lecture live, fallback gracieux) */
@@ -1220,6 +1265,71 @@ function renderFocusCoherence(items){
       <div class="coh-line">${focusDateLabel(g[0])} — ${g.length} évts : ${g.map(i=>i.name).join(' · ')}<br>${facs.join(' / ')}${detail?'<br>'+detail:''}</div></div>`;
   }).join('');
   el.innerHTML=html;
+}
+
+/* CHRONOS — Destinée : les trois Parques (naissance / vie & liens / mort) */
+function destEntityOptions(){
+  const ls=S.loreTemporal.entities||{};
+  let ents=(S.atlas.entities||[]).slice();
+  if(!ents.length)ents=Object.keys(ls).map(id=>({id,label:ls[id].label||id,category:''}));
+  ents.sort((a,b)=>{const la=ls[a.id]?0:1,lb=ls[b.id]?0:1;return la!==lb?la-lb:(a.label||'').localeCompare(b.label||'');});
+  return ents;
+}
+function initDestineeSelector(){
+  const sel=document.getElementById('dest-entity');const prev=sel.value;
+  const ents=destEntityOptions(),ls=S.loreTemporal.entities||{};
+  sel.innerHTML=ents.map(e=>`<option value="${e.id}">${ls[e.id]?'🧵 ':''}${e.label} · ${e.category||''}</option>`).join('');
+  if(prev&&ents.some(e=>e.id===prev))sel.value=prev;
+  else if(ents.some(e=>e.id==='joy'))sel.value='joy';
+}
+async function renderDestinee(){
+  const slug=document.getElementById('dest-entity').value;
+  const box=document.getElementById('dest-thread');
+  if(!slug){box.innerHTML='<div class="dest-empty">Aucune entité.</div>';return;}
+  box.innerHTML='<div class="dest-empty">Le fil se tisse…</div>';
+  const ls=(S.loreTemporal.entities||{})[slug]||null;
+  let node={relations:[]};
+  try{const d=await api.get('/api/atlas/node/'+encodeURIComponent(slug));if(d.online)node=d;}catch(e){}
+  const rels=node.relations||[];
+  const label=(node.node&&node.node.label)||(ls&&ls.label)||slug;
+  const evs=S.allEvents.filter(e=>e.atlas_entity===slug&&e.an!=null);
+  const birth=ls&&ls.birth!=null?ls.birth:null, death=ls&&ls.death!=null?ls.death:null;
+  const clothoDate=birth!=null?chronosYearShort(birth):'—';
+  const clothoSub=ls&&ls.reason?ls.reason:(birth!=null?'':'Origine non datée dans le lore.');
+  const atroposDate=death!=null?chronosYearShort(death):(birth!=null?'∞':'—');
+  const atroposSub=death!=null?'Le fil est coupé.':(birth!=null?'Fil encore tendu — toujours active.':'Fin inconnue.');
+  const lifeLen=(birth!=null&&death!=null)?`${death-birth} ans de fil`:(birth!=null?'durée indéterminée':'');
+  const thread=[];
+  evs.forEach(e=>thread.push({an:e.an,af:anFraction(e.an,e.month,e.day),kind:'ev',what:e.name,with:e.faction_name||''}));
+  rels.filter(r=>r.an&&r.an!==0).forEach(r=>thread.push({an:r.an,af:r.an,kind:'rel',what:`${r.rel_type} — ${r.other_label}`,with:''}));
+  thread.sort((a,b)=>a.af-b.af);
+  const threadHtml=thread.length?thread.map(t=>`<div class="thread-node ${t.kind}">
+    <div class="thread-when">${chronosYearShort(t.an)}</div><div class="thread-what">${t.what}</div>${t.with?`<div class="thread-with">${t.with}</div>`:''}</div>`).join('')
+    :'<div class="thread-with" style="padding:8px 0">Aucun événement daté — le fil reste énigmatique.</div>';
+  const undated=rels.filter(r=>!r.an||r.an===0);const byType={};
+  undated.forEach(r=>{(byType[r.rel_type]=byType[r.rel_type]||[]).push(r)});
+  const RELF={membre:'Membre de',allie:'Alliés',ami:'Amis',ennemi:'Ennemis',connecte:'Connexions',parent:'Parent',ancetre:'Ancêtres',situe:'Situé'};
+  const relGroups=Object.keys(byType).map(tp=>`<div class="dest-rel-group"><h5>${RELF[tp]||tp} (liens non datés)</h5>${
+    byType[tp].map(r=>`<span class="dest-rel-chip">${r.other_label}</span>`).join('')}</div>`).join('');
+  box.innerHTML=`
+    <div class="parque clotho">
+      <div class="parque-role">Nona · Clotho</div><div class="parque-name">Le fil est filé</div>
+      <div class="parque-tag">« filer » — elle fabrique le fil des destinées</div>
+      <div class="parque-date">${clothoDate}</div>
+      <div class="parque-sub">Naissance / apparition de <b>${label}</b>.<br>${clothoSub}</div>
+    </div>
+    <div class="parque lachesis">
+      <div class="parque-role">Decima · Lachésis</div><div class="parque-name">Le fil se déroule</div>
+      <div class="parque-tag">« le sort » — ce qu'elle a vécu, et avec qui</div>
+      <div class="thread-line">${threadHtml}</div>
+      ${relGroups?`<div style="margin-top:6px">${relGroups}</div>`:''}
+    </div>
+    <div class="parque atropos">
+      <div class="parque-role">Morta · Atropos</div><div class="parque-name">Le fil est coupé</div>
+      <div class="parque-tag">« inévitable » — elle tranche la durée de vie</div>
+      <div class="parque-date">${atroposDate}</div><div class="parque-sub">${atroposSub}</div>
+      ${lifeLen?`<div class="dest-life-len">📏 ${lifeLen}</div>`:''}
+    </div>`;
 }
 
 function showTip(ev,name,fac,an,desc){
