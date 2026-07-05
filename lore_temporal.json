@@ -24,6 +24,15 @@
     {"id": 3748, "source": "fractales-libres", "target": "cgu-rectitude", "rel_type": "ennemi", "since": "An430", "reason": "celeste-kessler.md: confrontations C.G.U. An 430-445 (Fractales Libres)"},
     {"id": 3747, "source": "fractales-libres", "target": "nova-7",   "rel_type": "allie",  "since": "An430", "reason": "celeste-kessler.md: collaboration Nova 7 des An 430"},
     {"id": 3535, "source": "homo-mechanicus", "target": "joy",       "rel_type": "ami",    "since": "An400", "reason": "homo-mechanicus.md: porte des fragments de Joy des sa creation (~An 400)"},
-    {"id": 3736, "source": "renegats", "target": "cgu-rectitude",   "rel_type": "ennemi", "since": "An421", "reason": "Ere Binaire — conflit ouvert Renegats vs C.G.U. (An 421-422)"}
+    {"id": 3736, "source": "renegats", "target": "cgu-rectitude",   "rel_type": "ennemi", "since": "An421", "reason": "Ere Binaire — conflit ouvert Renegats vs C.G.U. (An 421-422)"},
+    {"id": 3526, "source": "zoe", "target": "ari-18",   "rel_type": "ami", "since": "An403", "reason": "zoe.md: enfant hybride de Zoe x Homo Mechanicus (lignee des l'union An 402)"},
+    {"id": 3527, "source": "zoe", "target": "drayk-21", "rel_type": "ami", "since": "An403", "reason": "zoe.md: enfant hybride (lignee des An 402)"},
+    {"id": 3528, "source": "zoe", "target": "kael-14",  "rel_type": "ami", "since": "An403", "reason": "zoe.md: enfant hybride (lignee des An 402)"},
+    {"id": 3529, "source": "zoe", "target": "lux-03",   "rel_type": "ami", "since": "An403", "reason": "zoe.md: enfant hybride (lignee des An 402)"},
+    {"id": 3530, "source": "zoe", "target": "lyra-07",  "rel_type": "ami", "since": "An403", "reason": "zoe.md: enfant hybride (lignee des An 402)"},
+    {"id": 3531, "source": "zoe", "target": "veyra-09", "rel_type": "ami", "since": "An403", "reason": "zoe.md: enfant hybride (lignee des An 402)"},
+    {"id": 3532, "source": "zoe", "target": "zaya-11",  "rel_type": "ami", "since": "An403", "reason": "zoe.md: enfant hybride (lignee des An 402)"},
+    {"id": 3778, "source": "purete-humaine", "target": "cgu-rectitude", "rel_type": "parent", "since": "An20",  "reason": "purete-humaine.md: institutionnalisation des l'An 20"},
+    {"id": 3777, "source": "purete-humaine", "target": "renegats",      "rel_type": "ennemi", "since": "An420", "reason": "purete-humaine.md: crise face a la Rebellion Controlee An 420"}
   ]
 }
