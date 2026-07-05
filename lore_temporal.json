@@ -18,6 +18,12 @@
     {"id": 3493, "source": "l1l1th",   "target": "briseurs-de-conscience", "rel_type": "ennemi",   "since": "An452", "reason": "l1l1th.md: revelation An 452 -> hostilite active des Briseurs"},
     {"id": 3582, "source": "celeste-kessler", "target": "nova-7",   "rel_type": "connecte", "since": "An430", "reason": "celeste-kessler.md: collaboration Nova 7 An 430-445"},
     {"id": 3488, "source": "3v3",      "target": "l1l1th",          "rel_type": "connecte", "since": "An400", "reason": "3v3.md: code de L1L1TH integre a l'architecture des sa mise en service An ~400"},
-    {"id": 3534, "source": "zoe",      "target": "renegats",        "rel_type": "connecte", "since": "An421", "reason": "zoe.md: alliee ideologique des Renegats via l'heritage de Joy (An 421)"}
+    {"id": 3534, "source": "zoe",      "target": "renegats",        "rel_type": "connecte", "since": "An421", "reason": "zoe.md: alliee ideologique des Renegats via l'heritage de Joy (An 421)"},
+    {"id": 3580, "source": "celeste-kessler", "target": "fractales-libres", "rel_type": "membre", "since": "An410", "reason": "celeste-kessler.md: integration aux Fractales Libres An 410-430"},
+    {"id": 3767, "source": "nova-7",   "target": "cgu-rectitude",   "rel_type": "ennemi", "since": "An70",  "reason": "nova-7.md: conflit ouvert avec la Rectitude An 70"},
+    {"id": 3748, "source": "fractales-libres", "target": "cgu-rectitude", "rel_type": "ennemi", "since": "An430", "reason": "celeste-kessler.md: confrontations C.G.U. An 430-445 (Fractales Libres)"},
+    {"id": 3747, "source": "fractales-libres", "target": "nova-7",   "rel_type": "allie",  "since": "An430", "reason": "celeste-kessler.md: collaboration Nova 7 des An 430"},
+    {"id": 3535, "source": "homo-mechanicus", "target": "joy",       "rel_type": "ami",    "since": "An400", "reason": "homo-mechanicus.md: porte des fragments de Joy des sa creation (~An 400)"},
+    {"id": 3736, "source": "renegats", "target": "cgu-rectitude",   "rel_type": "ennemi", "since": "An421", "reason": "Ere Binaire — conflit ouvert Renegats vs C.G.U. (An 421-422)"}
   ]
 }
