@@ -33,6 +33,11 @@
     {"id": 3531, "source": "zoe", "target": "veyra-09", "rel_type": "ami", "since": "An403", "reason": "zoe.md: enfant hybride (lignee des An 402)"},
     {"id": 3532, "source": "zoe", "target": "zaya-11",  "rel_type": "ami", "since": "An403", "reason": "zoe.md: enfant hybride (lignee des An 402)"},
     {"id": 3778, "source": "purete-humaine", "target": "cgu-rectitude", "rel_type": "parent", "since": "An20",  "reason": "purete-humaine.md: institutionnalisation des l'An 20"},
-    {"id": 3777, "source": "purete-humaine", "target": "renegats",      "rel_type": "ennemi", "since": "An420", "reason": "purete-humaine.md: crise face a la Rebellion Controlee An 420"}
+    {"id": 3777, "source": "purete-humaine", "target": "renegats",      "rel_type": "ennemi", "since": "An420", "reason": "purete-humaine.md: crise face a la Rebellion Controlee An 420"},
+    {"id": 3781, "source": "nonae-recta", "target": "renegats",     "rel_type": "ennemi", "since": "An400", "reason": "nonae-recta.md: montee en puissance face a la resistance An 400-450"},
+    {"id": 3782, "source": "nonae-recta", "target": "nova-7",       "rel_type": "ennemi", "since": "An400", "reason": "nonae-recta.md: traque des synthetiques, montee An 400"},
+    {"id": 3753, "source": "illumines-de-la-singularite", "target": "nova-7", "rel_type": "allie", "since": "An50", "reason": "illumines.md: veneration de Nova 7, fragmentation sur son role des An 50"},
+    {"id": 3735, "source": "renegats", "target": "fractales-libres", "rel_type": "allie",  "since": "An390", "reason": "fractales-libres.md: resistance active des An 390, alliance avec les Renegats"},
+    {"id": 3539, "source": "mik-l", "target": "renegats",          "rel_type": "membre", "since": "An400", "reason": "co-conscience de Joy, resistance des l'ere de Joy (~An 400)"}
   ]
 }
