@@ -47,6 +47,8 @@ Créer une application temporelle claire, lisible et adaptée à l'univers de la
 ## Demandes externes (Argus)
 
 <!-- argus:begin -->
+- [ ] ⇐ AZA Sessions : Une bibliothèque Python légère ou une API locale exposant les fonctions de conversion de dates et la liste officielle des mois/saisons.
+      _pourquoi : Pour automatiser l'enrichissement de mes journaux de sessions avec la chronologie exacte de la Rectitude sans dupliquer la logique de calcul ni risquer d'utiliser des constantes obsolètes._
 - [ ] ⚑ Mise en place d'une alerte temporelle
       _pourquoi : Alerter les utilisateurs des événements importants à venir, ce qui peut être utile pour les scénaristes et les fans qui souhaitent rester informés des prochains développements du lore._
 - [ ] ⚑ Intégration d'un calendrier interactif
