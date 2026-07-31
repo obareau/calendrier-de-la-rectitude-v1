@@ -43,3 +43,12 @@ Créer une application temporelle claire, lisible et adaptée à l'univers de la
 - Favoriser le vanilla JS et des composants CSS simples
 - Documenter chaque nouveau format d'import/export dans `README.md`
 - Conserver la compatibilité SQLite pour une maintenance facile
+
+## Demandes externes (Argus)
+
+<!-- argus:begin -->
+- [ ] ⚑ Mise en place d'une alerte temporelle
+      _pourquoi : Alerter les utilisateurs des événements importants à venir, ce qui peut être utile pour les scénaristes et les fans qui souhaitent rester informés des prochains développements du lore._
+- [ ] ⚑ Intégration d'un calendrier interactif
+      _pourquoi : Permettre aux utilisateurs de visualiser et interagir directement avec les événements sur un calendrier en ligne, facilitant ainsi la compréhension du flux des temps dans l'univers Robotariis._
+<!-- argus:end -->
