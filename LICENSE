@@ -26,10 +26,19 @@ NOTE ON THE ROBŌTARIIS UNIVERSE
 
 The MIT license above covers the SOURCE CODE only.
 
-It does not grant any right over the Robōtariis fictional universe: the name
-"Robōtariis", its characters, factions, places, artefacts, terminology, visual
-identity, and the narrative works produced with these tools. Those remain the
-exclusive property of the author, all rights reserved.
+It does not cover the Robōtariis fictional universe — the lore, characters,
+factions, places, artefacts, terminology and narrative works. Those are
+published separately under Creative Commons BY-NC-SA 4.0:
+
+    https://robotariis.com/licence
+
+In short: derivative works are welcome (fan fiction, illustration, RPG
+material), commercial use of the universe is not, and adaptations must share
+alike. The code above has no such restriction.
+
+The name "Robōtariis", the sigil and the visual identity are not under CC.
+You may tell stories in this universe; you may not present yourself as its
+publisher.
 
 In plain terms: fork the code, study it, build on it, sell what you build with
 it. But the world it was written for is not part of the deal.
