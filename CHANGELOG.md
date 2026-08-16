@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.6.0] 2026-08-15
+- Chronos : navigation complète de la frise — molette, Ctrl+molette (zoom centré
+  sur le curseur), glisser-déplacer, flèches ↑↓ pour zoomer et ←→ pour défiler
+  (Maj = pas large), Origine pour tout voir
+- Chronos : zoom CONTINU au lieu de six crans en dur qui sautaient d'un facteur 3,5
+- Chronos : 134 dates versées depuis le canon — 42 de la timeline canonique et 92
+  du frontmatter des chapitres. La frise passe de 64 à 143 points datés, sur 56
+  années couvertes (An -62 à An 729)
+- Interface : largeur portée de 980 px fixes à min(2200px, 96vw) ; la frise suit
+  désormais la place disponible et se redessine au redimensionnement
+- Chronos : hauteur des voies portée de 44 à 96 px — les événements empilés sur
+  quatre niveaux se chevauchaient
+- Correctif : les raccourcis clavier et le redessin au redimensionnement testaient
+  `S.view`, qui n'existe pas — c'est `S.currentView`. Aucun ne fonctionnait
+- À propos : documentation des raccourcis et de l'origine des dates
+
 ## [1.4.2] 2026-05-03
 - Sprint 2 commencé : Ajout des périodes temporelles avec dates de début et fin
 - Sélecteurs de plages temporelles personnalisées dans la timeline (début/fin)

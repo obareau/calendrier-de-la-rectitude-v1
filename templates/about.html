@@ -14,21 +14,48 @@ a:hover{text-decoration:underline}
 .summary{font-size:13px;color:#94a3b8;margin:14px 0 18px}
 .btn{display:inline-block;margin-top:18px;padding:10px 16px;border:1px solid #334155;border-radius:8px;color:#e2e8f0;text-decoration:none;transition:all .18s}
 .btn:hover{background:rgba(96,165,250,0.1);border-color:#60a5fa}
+kbd{background:rgba(148,163,184,.16);border:1px solid rgba(148,163,184,.3);border-radius:4px;padding:1px 6px;font-size:12px;font-family:inherit}
 </style>
 </head>
 <body>
 <div class="card">
-  <h1>À propos</h1>
+  <h1>À propos <span style="font-size:13px;color:#94a3b8;font-weight:400">v1.6.0</span></h1>
   <p>Calendrier de la Rectitude est une interface de gestion temporelle pour le continuum du Conseil des Gouvernances Unies.</p>
   <p class="summary">L'application propose un calendrier fictionnel, des règles de récurrence, des factions, des jours du silence et des fonctions d'export/import pour travailler hors ligne.</p>
   <p>Les principales fonctionnalités actuelles :</p>
   <ul>
     <li>Calendrier visuel par mois</li>
     <li>Gestion des événements ponctuels et récurrents</li>
-    <li>Timeline historique et vue par factions</li>
+    <li><strong>Chronos</strong> — la frise historique, et vue par factions</li>
     <li>Export PDF, export CSV et import CSV</li>
     <li>Pages d'information et journal des changements</li>
   </ul>
+
+  <h2 style="font-size:16px;margin:22px 0 8px">Naviguer dans Chronos</h2>
+  <p class="summary">La frise couvre près de huit siècles : elle se parcourt à la
+  souris comme au clavier, sans jamais passer par la barre de défilement.</p>
+  <table style="width:100%;border-collapse:collapse;font-size:14px">
+    <tr><td style="padding:4px 10px 4px 0;white-space:nowrap"><kbd>↑</kbd> / <kbd>↓</kbd></td>
+        <td>Zoomer / dézoomer, en continu</td></tr>
+    <tr><td style="padding:4px 10px 4px 0;white-space:nowrap"><kbd>←</kbd> / <kbd>→</kbd></td>
+        <td>Défiler — <kbd>Maj</kbd> pour un pas large</td></tr>
+    <tr><td style="padding:4px 10px 4px 0;white-space:nowrap"><kbd>Origine</kbd></td>
+        <td>Tout voir d'un coup</td></tr>
+    <tr><td style="padding:4px 10px 4px 0;white-space:nowrap">Molette</td>
+        <td>Défilement horizontal</td></tr>
+    <tr><td style="padding:4px 10px 4px 0;white-space:nowrap"><kbd>Ctrl</kbd> + molette</td>
+        <td>Zoom <em>centré sur le curseur</em> — le point regardé ne bouge pas</td></tr>
+    <tr><td style="padding:4px 10px 4px 0;white-space:nowrap">Glisser</td>
+        <td>Déplacer la frise directement</td></tr>
+    <tr><td style="padding:4px 10px 4px 0;white-space:nowrap">− &nbsp; + &nbsp; ⤢</td>
+        <td>Les mêmes actions, à la souris</td></tr>
+  </table>
+
+  <h2 style="font-size:16px;margin:22px 0 8px">D'où viennent les dates</h2>
+  <p class="summary">Chronos est garant du temps : les <strong>événements datés</strong>
+  vivent dans sa base, versés depuis le canon — la timeline canonique et le
+  frontmatter des chapitres. L'Atlas, garant de la cohérence, fournit en
+  surcouche ses <strong>relations</strong> datées lorsqu'il est en ligne.</p>
   <a class="btn" href="/">Retour à l'application</a>
   <a class="btn" href="/changelog">Voir le changelog</a>
 </div>

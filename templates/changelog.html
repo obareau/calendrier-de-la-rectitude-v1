@@ -18,7 +18,18 @@ a:hover{text-decoration:underline}
 <body>
 <div class="card">
   <h1>Changelog</h1>
-  <pre># [1.4.0] 2026-05-03
+  <pre># [1.6.0] 2026-08-15
+- Chronos : navigation complète — molette, Ctrl+molette (zoom centré sur le
+  curseur), glisser-déplacer, ↑↓ zoom, ←→ défilement (Maj = pas large),
+  Origine pour tout voir. Zoom continu au lieu de six crans en dur.
+- Chronos : 134 dates versées depuis le canon (42 de la timeline canonique,
+  92 du frontmatter des chapitres). De 64 à 143 points datés, An -62 → An 729.
+- Interface : largeur 980 px → min(2200px, 96vw), la frise suit l'écran et se
+  redessine au redimensionnement. Voies de 44 à 96 px.
+- Correctif : les raccourcis testaient `S.view`, qui n'existe pas — aucun ne
+  fonctionnait.
+
+# [1.4.0] 2026-05-03
 - Ajout de l'export CSV d'événements
 - Ajout de l'import CSV d'événements
 - Support amélioré des événements récurrents (monthly, every_n_years)

@@ -12,7 +12,7 @@ import urllib.request
 
 app = Flask(__name__)
 DB      = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'calendrier.db')
-VERSION = "1.5.0"
+VERSION = "1.6.0"
 
 # ── Atlas bridge ────────────────────────────────────────────────────────────────
 # Chronos est garant du temps ; l'Atlas est garant de la cohérence (graphe + lore).

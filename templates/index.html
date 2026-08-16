@@ -44,7 +44,10 @@ body{background:var(--bg);color:var(--txt2);font-family:'Courier New','Lucida Co
 button{font-family:inherit;cursor:pointer}
 input,select,textarea{font-family:inherit;font-size:inherit}
 
-#wrap{max-width:980px;margin:0 auto}
+/* ⚠️ 980px bridait toute l'interface au cinquième d'un écran large, ce qui
+   est intenable pour la frise horizontale de Chronos. Gouttière plutôt que
+   plafond, 2026-08-15. */
+#wrap{max-width:min(2200px, 96vw);margin:0 auto}
 .main-grid{display:grid;grid-template-columns:1fr 228px;gap:12px}
 .sidebar{display:flex;flex-direction:column;gap:10px}
 
@@ -266,17 +269,20 @@ input,select,textarea{font-family:inherit;font-size:inherit}
 .tl-fp-mini:hover{color:var(--txt2);border-color:var(--muted)}
 /* swimlanes */
 .tl-lanes{position:relative;min-width:900px}
-.tl-ruler{position:relative;height:26px;border-bottom:1px solid var(--border2);margin-left:var(--lane-label-w,150px)}
+.tl-ruler{position:relative;height:34px;border-bottom:1px solid var(--border2);margin-left:var(--lane-label-w,150px)}
 .tl-ruler-mark{position:absolute;top:2px;transform:translateX(-50%);font-size:10px;color:var(--muted);white-space:nowrap}
 .tl-ruler-tick{position:absolute;bottom:0;width:1px;height:7px;background:var(--border2)}
 .tl-foundation{position:absolute;top:0;bottom:0;width:2px;background:linear-gradient(var(--accent),transparent);z-index:1;pointer-events:none}
 .tl-foundation-label{position:absolute;top:-2px;transform:translateX(-50%);font-size:9px;color:var(--accent);font-weight:700;letter-spacing:.05em;white-space:nowrap}
-.tl-lane{position:relative;display:flex;align-items:stretch;border-bottom:1px dashed var(--border);min-height:44px}
+/* ⚠️ Hauteurs relevées le 2026-08-15 : à 44px les événements empilés (jusqu'à
+   4 niveaux via `top:50-stack*15%`) se chevauchaient et les étiquettes se
+   mangeaient. 96px laisse la pile respirer. */
+.tl-lane{position:relative;display:flex;align-items:stretch;border-bottom:1px dashed var(--border);min-height:96px}
 .tl-lane:hover{background:rgba(127,127,127,0.04)}
 .tl-lane-label{width:var(--lane-label-w,150px);flex-shrink:0;position:sticky;left:0;z-index:3;background:var(--bg2);display:flex;align-items:center;gap:7px;padding:6px 10px;font-size:11px;color:var(--txt2);border-right:2px solid var(--border);font-weight:600}
 .tl-lane-label .dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;box-shadow:0 0 0 2px var(--bg2)}
 .tl-lane-label .cnt{margin-left:auto;font-size:9px;color:var(--muted);font-weight:400}
-.tl-lane-track{position:relative;flex:1;min-height:44px}
+.tl-lane-track{position:relative;flex:1;min-height:96px}
 .tl-ev{position:absolute;top:50%;transform:translate(-50%,-50%);z-index:2}
 .tl-ev-dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--bg2);cursor:pointer;transition:transform .12s;box-shadow:0 1px 3px rgba(0,0,0,.4)}
 .tl-ev-dot:hover{transform:scale(1.45)}
@@ -433,9 +439,11 @@ input,select,textarea{font-family:inherit;font-size:inherit}
           <input type="number" id="tl-end-day" placeholder="Jour" min="1" max="30" onchange="updateTLCustom()">
         </div>
         <div class="tl-zoom" id="tl-zoom-ctrl">
-          <button class="btn-sm" onclick="tlZoom(-1)" title="Dézoomer">−</button>
+          <button class="btn-sm" onclick="tlZoom(-1)" title="Dézoomer (↓)">−</button>
           <span class="tl-zoom-label" id="tl-zoom-label">Ère</span>
-          <button class="btn-sm" onclick="tlZoom(1)" title="Zoomer">+</button>
+          <button class="btn-sm" onclick="tlZoom(1)" title="Zoomer (↑)">+</button>
+          <button class="btn-sm" onclick="S.tlZoom=TL_ZOOM_MIN;renderTimeline()" title="Tout voir (Origine)">⤢</button>
+          <span style="font-size:10px;color:var(--muted);margin-left:4px">↑↓ zoom · ←→ défiler · glisser · Ctrl+molette</span>
         </div>
         <div style="display:flex;gap:6px;margin-left:auto">
           <button class="btn-sm active" id="tl-tab-axis" onclick="setTLTab('axis')">☰ Frise</button>
@@ -815,10 +823,36 @@ function updateAtlasBadge(){
   if(contra>0){b.className='atlas-badge warn';b.textContent=`Atlas · ${contra} contradiction(s)`;}
   else{b.className='atlas-badge ok';b.textContent=`Atlas ✓ cohérent · ${tot.nodes||0} nœuds`;}
 }
+// ⚠️⚠️ Zoom CONTINU (2026-08-15). Les six crans en dur sautaient d'un facteur
+// 3,5 (0,9 → 2 → 6 → 20 → 70 → 200 px/an) : entre « Siècle » et « Décennie » on
+// perdait le repère, et le plancher « remplir l'écran » rendait les deux crans
+// les plus larges identiques — on cliquait sur « − » et rien ne bougeait.
+const TL_ZOOM_MIN=0.05, TL_ZOOM_MAX=600;
+
+function tlZoomLabel(px){
+  if(px<1.5)return'Ère'; if(px<8)return'Siècle'; if(px<30)return'Décennie';
+  if(px<120)return'Année'; return'Mois';
+}
+
+// Zoom en préservant le point sous le curseur (ou le centre de l'écran) : sans
+// ça la frise se recale à gauche à chaque cran et on perd ce qu'on regardait.
+function tlZoomAt(facteur, ancreClientX){
+  const outer=document.getElementById('tl-h-outer');
+  if(!outer){S.tlZoom=Math.max(TL_ZOOM_MIN,Math.min(TL_ZOOM_MAX,S.tlZoom*facteur));renderTimeline();return}
+  const r=outer.getBoundingClientRect();
+  const ax=(ancreClientX==null?r.width/2:ancreClientX-r.left);
+  const avant=outer.scrollLeft, largeurAvant=outer.scrollWidth||1;
+  const ratio=(avant+ax)/largeurAvant;
+  S.tlZoom=Math.max(TL_ZOOM_MIN,Math.min(TL_ZOOM_MAX,S.tlZoom*facteur));
+  renderTimeline();
+  requestAnimationFrame(()=>{
+    outer.scrollLeft=Math.max(0,ratio*(outer.scrollWidth||1)-ax);
+  });
+}
+
 function tlZoom(dir){
-  const cur=TL_ZOOMS.findIndex(z=>z.px===S.tlZoom);
-  let i=(cur<0?1:cur)+dir;i=Math.max(0,Math.min(TL_ZOOMS.length-1,i));
-  S.tlZoom=TL_ZOOMS[i].px;document.getElementById('tl-zoom-label').textContent=TL_ZOOMS[i].label;
+  tlZoomAt(dir>0?1.6:1/1.6,null);
+  return;
   renderTimeline();
 }
 
@@ -979,6 +1013,62 @@ function tlFiltered(){
   }).sort((a,b)=>anFraction(a.an,a.month,a.day)-anFraction(b.an,b.month,b.day));
 }
 
+// ⚠️ Sans ça, la frise garde la largeur qu'elle avait au premier rendu : on
+// élargit la fenêtre et elle reste étroite jusqu'au prochain clic. Débounce
+// 150 ms — renderTLAxis reconstruit tout le DOM des voies.
+// ⚠️ Navigation de la frise. Sans ça on ne dispose que de deux boutons et d'une
+// barre de défilement — intenable sur 790 ans d'histoire.
+//   molette          → défilement horizontal
+//   Ctrl/⌘ + molette → zoom centré sur le curseur
+//   glisser          → déplacement (pan)
+//   + / − / 0        → zoom avant, arrière, tout voir
+function tlBrancherNavigation(){
+  const outer=document.getElementById('tl-h-outer');
+  if(!outer||outer.dataset.navOk)return;
+  outer.dataset.navOk='1';
+  outer.style.cursor='grab';
+
+  outer.addEventListener('wheel',e=>{
+    if(e.ctrlKey||e.metaKey){e.preventDefault();tlZoomAt(e.deltaY<0?1.18:1/1.18,e.clientX);}
+    else if(Math.abs(e.deltaY)>Math.abs(e.deltaX)){e.preventDefault();outer.scrollLeft+=e.deltaY;}
+  },{passive:false});
+
+  let tire=false,x0=0,s0=0;
+  outer.addEventListener('pointerdown',e=>{
+    if(e.target.closest('.tl-ev,.tl-ev-dot,button,a,input'))return;
+    tire=true;x0=e.clientX;s0=outer.scrollLeft;outer.style.cursor='grabbing';
+    outer.setPointerCapture(e.pointerId);
+  });
+  outer.addEventListener('pointermove',e=>{if(tire)outer.scrollLeft=s0-(e.clientX-x0)});
+  const relache=()=>{tire=false;outer.style.cursor='grab'};
+  outer.addEventListener('pointerup',relache);
+  outer.addEventListener('pointercancel',relache);
+}
+
+// ⚠️⚠️ `S.currentView`, PAS `S.view` — ce dernier n'existe pas. La garde
+// sortait donc toujours et AUCUN raccourci ne fonctionnait. Même erreur dans le
+// gestionnaire de redimensionnement plus bas.
+// Flèches plutôt que +/− : pas de modificateur, pas de conflit avec le pavé
+// numérique, et ← → servent au déplacement, ce qui va de soi sur une frise.
+addEventListener('keydown',e=>{
+  if(typeof S==='undefined'||S.currentView!=='timeline')return;
+  if(/^(INPUT|TEXTAREA|SELECT)$/.test((e.target.tagName||'')))return;
+  const outer=document.getElementById('tl-h-outer');
+  const pas=e.shiftKey?600:150;
+  if(e.key==='ArrowUp'){e.preventDefault();tlZoomAt(1.6,null)}
+  else if(e.key==='ArrowDown'){e.preventDefault();tlZoomAt(1/1.6,null)}
+  else if(e.key==='ArrowLeft'&&outer){e.preventDefault();outer.scrollLeft-=pas}
+  else if(e.key==='ArrowRight'&&outer){e.preventDefault();outer.scrollLeft+=pas}
+  else if(e.key==='Home'){e.preventDefault();S.tlZoom=TL_ZOOM_MIN;renderTimeline()}
+});
+
+let _tlResizeT=null;
+addEventListener('resize',()=>{
+  if(typeof S==='undefined'||S.currentView!=='timeline')return;
+  clearTimeout(_tlResizeT);
+  _tlResizeT=setTimeout(()=>renderTimeline(),150);
+});
+
 function renderTimeline(){
   renderFactionPicker();
   const visible=tlRangeFilter(tlFiltered());
@@ -1027,7 +1117,21 @@ function renderTLAxis(evts){
   if(minA===maxA){minA-=2;maxA+=2;}
   const pad=(maxA-minA)*0.05+0.5; minA-=pad; maxA+=pad;
   const dspan=maxA-minA||1;
-  const trackW=Math.min(40000,Math.max(720,dspan*S.tlZoom));
+  // ⚠️ Le plancher était 720px EN DUR : sur un écran large et une plage courte,
+  // la frise restait à 720 quelle que soit la place disponible. Le plancher est
+  // désormais la largeur réelle du conteneur, moins la colonne d'étiquettes et
+  // la barre de défilement. Le zoom continue de l'élargir au-delà.
+  const outer=document.getElementById('tl-h-outer');
+  const dispo=Math.max(320,(outer?outer.clientWidth:0)-LW-24);
+  // ⚠️ Le plancher « remplir l'écran » ne vaut QUE tant qu'on n'a pas dézoomé
+  // exprès. Sinon Math.max(dispo, …) rend les deux crans les plus larges
+  // identiques : on clique sur « − » et rien ne bouge. Au niveau de zoom le
+  // plus bas, on laisse la frise être plus étroite que le conteneur.
+  const voulu=dspan*S.tlZoom;
+  // ⚠️ Le plancher « remplir l'écran » ne doit jamais empêcher de dézoomer :
+  // dès que la largeur voulue passe sous le conteneur, on la respecte.
+  const plancher=(voulu<dispo*0.98)?Math.max(320,voulu):dispo;
+  const trackW=Math.min(40000,Math.max(plancher,voulu));
   const xOf=a=>((a-minA)/dspan)*trackW;
   // ruler
   const approx=dspan/Math.max(1,(trackW/90));
@@ -1086,6 +1190,9 @@ function renderTLAxis(evts){
       <div class="tl-lane-label" style="color:var(--accent)"><span class="dot" style="background:var(--accent)"></span>◈ Atlas<span class="cnt">${its.length}</span></div>
       <div class="tl-lane-track" style="width:${trackW}px">${evHtml}</div></div>`;
   }
+  const lab=document.getElementById('tl-zoom-label');
+  if(lab)lab.textContent=tlZoomLabel(S.tlZoom);
+  tlBrancherNavigation();
   box.style.setProperty('--lane-label-w',LW+'px');
   box.style.width=(LW+trackW)+'px';
   box.innerHTML=`<div class="tl-ruler" style="width:${trackW}px">${marks}</div>${foundation}${lanesHtml}${atlasLaneHtml}`;
